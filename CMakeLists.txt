@@ -51,12 +51,12 @@ if(CROSSEYELEOP_BUILD_TESTS)
     include(CTest)
     enable_testing()
 
-    add_executable(domain_policy_tests
+    add_executable(session_coordinator_tests
         tests/domain/SessionCoordinatorTests.cpp
     )
 
-    target_link_libraries(domain_policy_tests PRIVATE cross_eyeleop_core)
-    add_test(NAME domain_policy_tests COMMAND domain_policy_tests)
+    target_link_libraries(session_coordinator_tests PRIVATE cross_eyeleop_core)
+    add_test(NAME session_coordinator_tests COMMAND session_coordinator_tests)
 endif()
 
 set(CPACK_PACKAGE_NAME "cross-eyeleop-app")
