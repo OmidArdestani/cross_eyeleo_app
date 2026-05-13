@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/domain_policy_tests.dir/link.d CMakeFiles/domain_policy_tests.dir/tests/domain/SessionCoordinatorTests.cpp.o -o domain_policy_tests  libcross_eyeleop_core.a

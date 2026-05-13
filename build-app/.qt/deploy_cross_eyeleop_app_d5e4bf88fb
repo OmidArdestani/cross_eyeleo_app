@@ -1,3 +1,0 @@
-
-include(/home/runner/work/cross_eyeleop_app/cross_eyeleop_app/build-app/.qt/QtDeploySupport.cmake)
-_qt_internal_show_skip_runtime_deploy_message("shared Qt libs")
