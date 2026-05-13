@@ -25,6 +25,8 @@ ui_*.h
 CrossEyeLeoApp
 CrossEyeLeoApp.exe
 *.app/
+# Allow the QtIFW package component directory (ends with .app but is not a bundle)
+!installer/packages/com.crosseyeleo.app/
 
 # Package files
 *.deb
