@@ -32,6 +32,11 @@ CrossEyeLeoApp.exe
 *.tar.gz
 *.zip
 *.dmg
+*.run
+
+# QtIFW installer staging – populated by CI, never committed
+installer/packages/com.crosseyeleo.app/data/*
+!installer/packages/com.crosseyeleo.app/data/.gitkeep
 
 # IDE
 .vscode/

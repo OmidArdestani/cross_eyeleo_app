@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <!-- Application identity -->
+    <Name>CrossEyeLeoApp</Name>
+    <Version>@@VERSION@@</Version>
+    <Title>CrossEyeLeo Eye Exercise Reminder – Setup</Title>
+
+    <!-- Publisher / contact info
+         Update the LinkedIn URL below with your actual profile URL. -->
+    <Publisher>Omid Ardestani</Publisher>
+    <ProductUrl>https://github.com/OmidArdestani/cross_eyeleo_app</ProductUrl>
+
+    <!-- Installer appearance -->
+    <WizardStyle>Modern</WizardStyle>
+
+    <!-- Windows Start Menu folder -->
+    <StartMenuDir>CrossEyeLeoApp</StartMenuDir>
+
+    <!-- Default installation directory (user can change during install) -->
+    <TargetDir>@HomeDir@/CrossEyeLeoApp</TargetDir>
+
+    <!-- Maintenance tool placed alongside the installed app -->
+    <MaintenanceToolName>CrossEyeLeoAppMaintenanceTool</MaintenanceToolName>
+    <AllowSpaceInPath>false</AllowSpaceInPath>
+
+    <!-- Custom controller script (Introduction + Finished page branding) -->
+    <ControlScript>installcontrol.qs</ControlScript>
+</Installer>

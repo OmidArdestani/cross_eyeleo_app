@@ -6,71 +6,216 @@ on:
       - 'v*'
 
 jobs:
+  # ------------------------------------------------------------------ Linux --
   release-linux:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Install Qt6
+
+      - name: Install Qt6 and Qt Installer Framework
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.6.0'
           modules: 'qtmultimedia'
-      - name: Install dependencies
+          tools: 'tools_ifw'
+
+      - name: Install build dependencies
         run: sudo apt-get install -y libxss-dev
+
       - name: Build
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCROSSEYELEO_BUILD_APP=ON
           cmake --build build --parallel
-          cd build && cpack -G DEB && cpack -G TGZ
+
+      - name: Stage installer data
+        run: |
+          DATA_DIR="installer/packages/com.crosseyeleo.app/data"
+          mkdir -p "$DATA_DIR/bin" "$DATA_DIR/lib" "$DATA_DIR/plugins/platforms"
+
+          # Copy the application binary
+          cp build/CrossEyeLeoApp "$DATA_DIR/bin/"
+
+          # Locate Qt shared libraries via qmake
+          QT_LIBS=$(qmake6 -query QT_INSTALL_LIBS 2>/dev/null || qmake -query QT_INSTALL_LIBS 2>/dev/null)
+          QT_PLUGINS=$(qmake6 -query QT_INSTALL_PLUGINS 2>/dev/null || qmake -query QT_INSTALL_PLUGINS 2>/dev/null)
+          if [ -z "$QT_LIBS" ] || [ -z "$QT_PLUGINS" ]; then
+            echo "ERROR: could not determine Qt install paths via qmake" && exit 1
+          fi
+
+          # Copy all Qt6 shared libs used by the app (fail on core, warn on optional)
+          for lib in Qt6Core Qt6Gui Qt6Widgets Qt6Multimedia Qt6Svg \
+                     Qt6DBus Qt6Network Qt6OpenGL Qt6OpenGLWidgets \
+                     Qt6XcbQpa Qt6MultimediaWidgets; do
+            SO="$QT_LIBS/lib${lib}.so.6"
+            if [ -f "$SO" ]; then
+              cp -L "$SO" "$DATA_DIR/lib/"
+            else
+              case "$lib" in
+                Qt6Core|Qt6Gui|Qt6Widgets)
+                  echo "ERROR: required library $SO not found" && exit 1 ;;
+                *) echo "WARNING: optional library $SO not found - skipping" ;;
+              esac
+            fi
+          done
+
+          # XCB platform plugin (needed for X11 display)
+          if [ -f "$QT_PLUGINS/platforms/libqxcb.so" ]; then
+            cp "$QT_PLUGINS/platforms/libqxcb.so" "$DATA_DIR/plugins/platforms/"
+          else
+            echo "WARNING: libqxcb.so not found - X11 display may not work"
+          fi
+          [ -f "$QT_PLUGINS/platforms/libqoffscreen.so" ] && \
+            cp "$QT_PLUGINS/platforms/libqoffscreen.so" "$DATA_DIR/plugins/platforms/" || true
+
+          # Launcher wrapper: sets LD_LIBRARY_PATH and QT_PLUGIN_PATH
+          cat > "$DATA_DIR/bin/run_crosseyeleo.sh" << 'WRAPPER'
+#!/bin/bash
+APP_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+export LD_LIBRARY_PATH="$APP_DIR/lib:$LD_LIBRARY_PATH"
+export QT_PLUGIN_PATH="$APP_DIR/plugins:$QT_PLUGIN_PATH"
+exec "$APP_DIR/bin/CrossEyeLeoApp" "$@"
+WRAPPER
+          chmod +x "$DATA_DIR/bin/run_crosseyeleo.sh"
+
+      - name: Create installer
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          RELEASE_DATE=$(date +%Y-%m-%d)
+          sed -i "s/@@VERSION@@/${VERSION}/g" installer/config/config.xml
+          sed -i "s/@@VERSION@@/${VERSION}/g" installer/packages/com.crosseyeleo.app/meta/package.xml
+          sed -i "s/@@RELEASEDATE@@/${RELEASE_DATE}/g" installer/packages/com.crosseyeleo.app/meta/package.xml
+
+          BINARYCREATOR=$(find "$IQTA_TOOLS/QtInstallerFramework" \
+            -name "binarycreator" -type f | head -1)
+          if [ -z "$BINARYCREATOR" ]; then
+            echo "ERROR: binarycreator not found under $IQTA_TOOLS/QtInstallerFramework" && exit 1
+          fi
+          "$BINARYCREATOR" --offline-only \
+            -c installer/config/config.xml \
+            -p installer/packages \
+            "CrossEyeLeoApp-${VERSION}-linux-x64.run"
+
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            build/*.deb
-            build/*.tar.gz
+          files: "*.run"
 
+  # --------------------------------------------------------------- Windows --
   release-windows:
     runs-on: windows-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Install Qt6
+
+      - name: Install Qt6 and Qt Installer Framework
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.6.0'
           modules: 'qtmultimedia'
+          tools: 'tools_ifw'
+
       - name: Build
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCROSSEYELEO_BUILD_APP=ON
           cmake --build build --config Release --parallel
-          cd build && cpack -C Release -G ZIP
-      - name: Deploy Qt
-        run: windeployqt build/Release/CrossEyeLeoApp.exe
+
+      - name: Stage installer data
+        shell: pwsh
+        run: |
+          $dataDir = "installer/packages/com.crosseyeleo.app/data"
+          New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+          Copy-Item "build/Release/CrossEyeLeoApp.exe" $dataDir
+          # Bundle Qt DLLs and plugins alongside the executable
+          windeployqt "$dataDir/CrossEyeLeoApp.exe"
+
+      - name: Create installer
+        shell: pwsh
+        run: |
+          $version     = $env:GITHUB_REF -replace "refs/tags/v", ""
+          $releaseDate = Get-Date -Format "yyyy-MM-dd"
+
+          (Get-Content "installer/config/config.xml") `
+            -replace "@@VERSION@@", $version |
+            Set-Content "installer/config/config.xml"
+          (Get-Content "installer/packages/com.crosseyeleo.app/meta/package.xml") `
+            -replace "@@VERSION@@",     $version `
+            -replace "@@RELEASEDATE@@", $releaseDate |
+            Set-Content "installer/packages/com.crosseyeleo.app/meta/package.xml"
+
+          $bc = Get-ChildItem -Path "$env:IQTA_TOOLS/QtInstallerFramework" `
+                  -Filter "binarycreator.exe" -Recurse |
+                Select-Object -First 1
+          if (-not $bc) {
+            Write-Error "binarycreator.exe not found under $env:IQTA_TOOLS/QtInstallerFramework"
+            exit 1
+          }
+          & $bc.FullName --offline-only `
+              -c installer/config/config.xml `
+              -p installer/packages `
+              "CrossEyeLeoApp-$version-windows-x64-Setup.exe"
+
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-          files: build/*.zip
+          files: "*-Setup.exe"
 
+  # ----------------------------------------------------------------- macOS --
   release-macos:
     runs-on: macos-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Install Qt6
+
+      - name: Install Qt6 and Qt Installer Framework
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.6.0'
           modules: 'qtmultimedia'
+          tools: 'tools_ifw'
+
       - name: Build
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCROSSEYELEO_BUILD_APP=ON
           cmake --build build --parallel
-          macdeployqt build/CrossEyeLeoApp.app -dmg
+
+      - name: Stage installer data
+        run: |
+          DATA_DIR="installer/packages/com.crosseyeleo.app/data"
+          mkdir -p "$DATA_DIR"
+          cp -r build/CrossEyeLeoApp.app "$DATA_DIR/"
+          # Bundle Qt frameworks and libraries inside the .app
+          macdeployqt "$DATA_DIR/CrossEyeLeoApp.app"
+
+      - name: Create installer
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          RELEASE_DATE=$(date +%Y-%m-%d)
+          sed -i '' "s/@@VERSION@@/${VERSION}/g" installer/config/config.xml
+          sed -i '' "s/@@VERSION@@/${VERSION}/g" installer/packages/com.crosseyeleo.app/meta/package.xml
+          sed -i '' "s/@@RELEASEDATE@@/${RELEASE_DATE}/g" installer/packages/com.crosseyeleo.app/meta/package.xml
+
+          BINARYCREATOR=$(find "$IQTA_TOOLS/QtInstallerFramework" \
+            -name "binarycreator" | head -1)
+          if [ -z "$BINARYCREATOR" ]; then
+            echo "ERROR: binarycreator not found under $IQTA_TOOLS/QtInstallerFramework" && exit 1
+          fi
+          "$BINARYCREATOR" --offline-only \
+            -c installer/config/config.xml \
+            -p installer/packages \
+            "CrossEyeLeoApp-${VERSION}-macos-Installer.app"
+
+          # Wrap the installer .app in a distributable DMG
+          hdiutil create \
+            -volname "CrossEyeLeoApp ${VERSION}" \
+            -srcfolder "CrossEyeLeoApp-${VERSION}-macos-Installer.app" \
+            -ov -format UDZO \
+            "CrossEyeLeoApp-${VERSION}-macos.dmg"
+
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-          files: build/*.dmg
+          files: "*.dmg"
