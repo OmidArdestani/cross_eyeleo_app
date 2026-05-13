@@ -20,6 +20,7 @@ TrayIcon::TrayIcon(QObject *parent)
 void TrayIcon::buildMenu()
 {
     m_menu = new QMenu();
+    connect(m_tray, &QObject::destroyed, m_menu, &QObject::deleteLater);
 
     QAction *settingsAction = m_menu->addAction(tr("Settings"));
     connect(settingsAction, &QAction::triggered, this, &TrayIcon::settingsRequested);
