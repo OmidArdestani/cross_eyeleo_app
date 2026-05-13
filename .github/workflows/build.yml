@@ -28,7 +28,7 @@ jobs:
         run: |
           cmake -B build-tests -DCROSSEYELEOP_BUILD_APP=OFF -DCROSSEYELEOP_BUILD_TESTS=ON
           cmake --build build-tests --parallel
-          cd build-tests && ctest --output-on-failure
+          cd build-tests && QT_QPA_PLATFORM=offscreen ctest --output-on-failure
 
   build-windows:
     runs-on: windows-latest

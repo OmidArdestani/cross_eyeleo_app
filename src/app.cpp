@@ -128,7 +128,7 @@ void App::onWarningDue()
     int minutes = static_cast<int>(remaining / 60000) + 1;
 
     if (!m_notificationWindow) {
-        m_notificationWindow = new NotificationWindow();
+        m_notificationWindow = new NotificationWindow(m_settings);
     }
     m_notificationWindow->showNotification(
         tr("Next long break in %1 minute(s)").arg(minutes));
