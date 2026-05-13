@@ -27,11 +27,13 @@ signals:
     void longBreakRequested();
     void quitRequested();
 
-private slots:
-    void onActivated(QSystemTrayIcon::ActivationReason reason);
-
 private:
     void buildMenu();
+
+    // Not declared as a Q_SLOT to prevent MOC from generating metatype code
+    // for QSystemTrayIcon::ActivationReason (causes ambiguous operator<< on GCC).
+    // Connected via lambda in the constructor instead.
+    void onActivated(QSystemTrayIcon::ActivationReason reason);
 
     QSystemTrayIcon *m_tray{nullptr};
     QMenu           *m_menu{nullptr};

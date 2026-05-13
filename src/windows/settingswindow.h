@@ -3,6 +3,7 @@
 #include <QDialog>
 #include <QTabWidget>
 #include <QCheckBox>
+#include <QVariant>   // must precede QSpinBox to satisfy qabstractspinbox.h in MOC compilation
 #include <QSpinBox>
 #include <QLabel>
 #include <QPushButton>

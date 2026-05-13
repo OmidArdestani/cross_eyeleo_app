@@ -12,7 +12,9 @@ TrayIcon::TrayIcon(QObject *parent)
     setIcon(true);
 
     connect(m_tray, &QSystemTrayIcon::activated,
-            this,   &TrayIcon::onActivated);
+            this, [this](QSystemTrayIcon::ActivationReason reason) {
+                onActivated(reason);
+            });
 }
 
 void TrayIcon::buildMenu()
