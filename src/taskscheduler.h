@@ -14,6 +14,11 @@ public:
     void startMiniPauseTimer(int intervalMinutes);
     void startWarningTimer(int minutesBefore);
 
+    // Start timers for an exact millisecond delay without changing the
+    // configured interval (used for postpone and inactivity-resume).
+    void startBigPauseTimerMs(qint64 delayMs);
+    void startMiniPauseTimerMs(qint64 delayMs);
+
     void resetBigPauseTimer();
     void resetMiniPauseTimer();
 
@@ -35,7 +40,4 @@ private:
 
     int m_bigPauseIntervalMs{0};
     int m_miniPauseIntervalMs{0};
-
-    qint64 m_bigPauseStartMs{0};
-    qint64 m_miniPauseStartMs{0};
 };

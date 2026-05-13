@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(CrossEyeLeopApp VERSION 1.0.0 LANGUAGES CXX)
+project(CrossEyeLeoApp VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -7,12 +7,12 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-option(CROSSEYELEOP_BUILD_APP "Build the main application" ON)
-option(CROSSEYELEOP_BUILD_TESTS "Build tests" OFF)
+option(CROSSEYELEO_BUILD_APP "Build the main application" ON)
+option(CROSSEYELEO_BUILD_TESTS "Build tests" OFF)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Multimedia Svg)
 
-if(CROSSEYELEOP_BUILD_APP)
+if(CROSSEYELEO_BUILD_APP)
     set(APP_SOURCES
         src/main.cpp
         src/app.cpp
@@ -30,14 +30,14 @@ if(CROSSEYELEOP_BUILD_APP)
         resources/app.qrc
     )
 
-    qt_add_executable(CrossEyeLeopApp
+    qt_add_executable(CrossEyeLeoApp
         WIN32 MACOSX_BUNDLE
         ${APP_SOURCES}
     )
 
-    target_include_directories(CrossEyeLeopApp PRIVATE src)
+    target_include_directories(CrossEyeLeoApp PRIVATE src)
 
-    target_link_libraries(CrossEyeLeopApp PRIVATE
+    target_link_libraries(CrossEyeLeoApp PRIVATE
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
@@ -46,55 +46,55 @@ if(CROSSEYELEOP_BUILD_APP)
     )
 
     if(WIN32)
-        target_link_libraries(CrossEyeLeopApp PRIVATE user32)
+        target_link_libraries(CrossEyeLeoApp PRIVATE user32)
     elseif(UNIX AND NOT APPLE)
         find_package(PkgConfig QUIET)
         if(PkgConfig_FOUND)
             pkg_check_modules(XSCRNSAVER xscrnsaver QUIET)
             if(XSCRNSAVER_FOUND)
-                target_link_libraries(CrossEyeLeopApp PRIVATE ${XSCRNSAVER_LIBRARIES})
-                target_include_directories(CrossEyeLeopApp PRIVATE ${XSCRNSAVER_INCLUDE_DIRS})
-                target_compile_definitions(CrossEyeLeopApp PRIVATE HAVE_XSCRNSAVER)
+                target_link_libraries(CrossEyeLeoApp PRIVATE ${XSCRNSAVER_LIBRARIES})
+                target_include_directories(CrossEyeLeoApp PRIVATE ${XSCRNSAVER_INCLUDE_DIRS})
+                target_compile_definitions(CrossEyeLeoApp PRIVATE HAVE_XSCRNSAVER)
             endif()
         endif()
         find_package(X11 QUIET)
         if(X11_FOUND)
-            target_link_libraries(CrossEyeLeopApp PRIVATE ${X11_LIBRARIES})
-            target_include_directories(CrossEyeLeopApp PRIVATE ${X11_INCLUDE_DIR})
+            target_link_libraries(CrossEyeLeoApp PRIVATE ${X11_LIBRARIES})
+            target_include_directories(CrossEyeLeoApp PRIVATE ${X11_INCLUDE_DIR})
         endif()
     endif()
 
-    set_target_properties(CrossEyeLeopApp PROPERTIES
-        MACOSX_BUNDLE_GUI_IDENTIFIER "com.crosseyeleop.app"
+    set_target_properties(CrossEyeLeoApp PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.crosseyeleo.app"
         MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
-        MACOSX_BUNDLE_BUNDLE_NAME "CrossEyeLeopApp"
+        MACOSX_BUNDLE_BUNDLE_NAME "CrossEyeLeoApp"
     )
 
     include(GNUInstallDirs)
-    install(TARGETS CrossEyeLeopApp
+    install(TARGETS CrossEyeLeoApp
         BUNDLE DESTINATION .
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
-    set(CPACK_PACKAGE_NAME "CrossEyeLeopApp")
+    set(CPACK_PACKAGE_NAME "CrossEyeLeoApp")
     set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-    set(CPACK_PACKAGE_VENDOR "CrossEyeLeop")
+    set(CPACK_PACKAGE_VENDOR "CrossEyeLeo")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Cross-platform eye exercise reminder")
-    set(CPACK_PACKAGE_CONTACT "contact@crosseyeleop.example.com")
+    set(CPACK_PACKAGE_CONTACT "contact@crosseyeleo.example.com")
     if(WIN32)
         set(CPACK_GENERATOR "ZIP")
     elseif(APPLE)
         set(CPACK_GENERATOR "DragNDrop")
     else()
         set(CPACK_GENERATOR "DEB;TGZ")
-        set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CrossEyeLeop")
+        set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CrossEyeLeo")
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6gui6, libqt6widgets6, libqt6multimedia6, libqt6svg6")
     endif()
     include(CPack)
 endif()
 
-if(CROSSEYELEOP_BUILD_TESTS)
+if(CROSSEYELEO_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()

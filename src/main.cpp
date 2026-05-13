@@ -4,10 +4,10 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    QApplication::setApplicationName("CrossEyeLeopApp");
+    QApplication::setApplicationName("CrossEyeLeoApp");
     QApplication::setApplicationVersion("1.0.0");
-    QApplication::setOrganizationName("CrossEyeLeop");
-    QApplication::setOrganizationDomain("crosseyeleop.example.com");
+    QApplication::setOrganizationName("CrossEyeLeo");
+    QApplication::setOrganizationDomain("crosseyeleo.example.com");
     QApplication::setQuitOnLastWindowClosed(false);
 
     App app;

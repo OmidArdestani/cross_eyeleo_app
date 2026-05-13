@@ -1,4 +1,4 @@
-# CrossEyeLeopApp
+# CrossEyeLeoApp
 
 A cross-platform eye exercise reminder application built with **Qt6 / C++17**. It sits in your system tray and periodically prompts you to take short and long breaks with guided eye exercises — helping reduce eye strain during long computer sessions.
 
@@ -47,8 +47,8 @@ Inspired by [EyeLeo](https://eyeleo.com/).
 
 ```bash
 # Clone the repository
-git clone https://github.com/OmidArdestani/cross_eyeleop_app.git
-cd cross_eyeleop_app
+git clone https://github.com/OmidArdestani/cross_eyeleo_app.git
+cd cross_eyeleo_app
 
 # Configure and build
 cmake -B build -DCMAKE_BUILD_TYPE=Release
@@ -65,15 +65,15 @@ sudo apt-get install -y libxss-dev   # Ubuntu/Debian
 
 | CMake option | Default | Description |
 |---|---|---|
-| `CROSSEYELEOP_BUILD_APP` | `ON` | Build the main application |
-| `CROSSEYELEOP_BUILD_TESTS` | `OFF` | Build the unit test suite |
+| `CROSSEYELEO_BUILD_APP` | `ON` | Build the main application |
+| `CROSSEYELEO_BUILD_TESTS` | `OFF` | Build the unit test suite |
 
 ### Run
 
 ```bash
-./build/CrossEyeLeopApp          # Linux
-open build/CrossEyeLeopApp.app   # macOS
-build\Release\CrossEyeLeopApp.exe  # Windows
+./build/CrossEyeLeoApp          # Linux
+open build/CrossEyeLeoApp.app   # macOS
+build\Release\CrossEyeLeoApp.exe  # Windows
 ```
 
 ---
@@ -83,7 +83,7 @@ build\Release\CrossEyeLeopApp.exe  # Windows
 Tests are built separately to avoid pulling in GUI dependencies:
 
 ```bash
-cmake -B build-tests -DCROSSEYELEOP_BUILD_APP=OFF -DCROSSEYELEOP_BUILD_TESTS=ON
+cmake -B build-tests -DCROSSEYELEO_BUILD_APP=OFF -DCROSSEYELEO_BUILD_TESTS=ON
 cmake --build build-tests --parallel
 
 # Linux/macOS (headless)
@@ -98,7 +98,7 @@ cd build-tests && ctest -C Release --output-on-failure
 ## Project Structure
 
 ```
-cross_eyeleop_app/
+cross_eyeleo_app/
 ├── src/
 │   ├── main.cpp                   Entry point; single QApplication instance
 │   ├── app.cpp / app.h            Top-level orchestrator

@@ -48,7 +48,7 @@ jobs:
           cmake --build build --config Release --parallel
           cd build && cpack -C Release -G ZIP
       - name: Deploy Qt
-        run: windeployqt build/Release/CrossEyeLeopApp.exe
+        run: windeployqt build/Release/CrossEyeLeoApp.exe
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
@@ -69,7 +69,7 @@ jobs:
         run: |
           cmake -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --parallel
-          macdeployqt build/CrossEyeLeopApp.app -dmg
+          macdeployqt build/CrossEyeLeoApp.app -dmg
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:

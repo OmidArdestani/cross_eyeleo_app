@@ -83,7 +83,7 @@ void TrayIcon::setIcon(bool active)
         icon = QIcon(px);
     }
     m_tray->setIcon(icon);
-    m_tray->setToolTip(active ? tr("CrossEyeLeopApp") : tr("CrossEyeLeopApp (paused)"));
+    m_tray->setToolTip(active ? tr("CrossEyeLeoApp") : tr("CrossEyeLeoApp (paused)"));
 }
 
 void TrayIcon::setPaused(bool paused)

@@ -12,7 +12,7 @@ SettingsWindow::SettingsWindow(SettingsManager *settings, QWidget *parent)
     : QDialog(parent)
     , m_settings(settings)
 {
-    setWindowTitle(tr("Settings - CrossEyeLeopApp"));
+    setWindowTitle(tr("Settings - CrossEyeLeoApp"));
     setMinimumSize(480, 420);
     setupUi();
 }
@@ -161,7 +161,7 @@ void SettingsWindow::setupInfoTab(QWidget *tab)
     vl->setContentsMargins(16, 16, 16, 16);
 
     QLabel *appLabel = new QLabel(
-        "<b>CrossEyeLeopApp</b> v1.0.0<br/>"
+        "<b>CrossEyeLeoApp</b> v1.0.0<br/>"
         "A cross-platform eye exercise reminder.", tab);
     appLabel->setAlignment(Qt::AlignCenter);
     vl->addWidget(appLabel);
@@ -184,7 +184,7 @@ void SettingsWindow::setupInfoTab(QWidget *tab)
     vl->addWidget(statsGroup);
 
     QLabel *linkLabel = new QLabel(
-        tr("<a href=\"https://github.com/OmidArdestani/cross_eyeleop_app\">"
+        tr("<a href=\"https://github.com/OmidArdestani/cross_eyeleo_app\">"
            "View on GitHub</a>"), tab);
     linkLabel->setOpenExternalLinks(true);
     linkLabel->setAlignment(Qt::AlignCenter);

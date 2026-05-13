@@ -1,7 +1,5 @@
 #include "taskscheduler.h"
 
-#include <QDateTime>
-
 TaskScheduler::TaskScheduler(QObject *parent)
     : QObject(parent)
 {
@@ -21,29 +19,40 @@ TaskScheduler::TaskScheduler(QObject *parent)
 void TaskScheduler::startBigPauseTimer(int intervalMinutes)
 {
     m_bigPauseIntervalMs = intervalMinutes * 60 * 1000;
-    m_bigPauseStartMs = QDateTime::currentMSecsSinceEpoch();
     m_bigPauseTimer->start(m_bigPauseIntervalMs);
 }
 
 void TaskScheduler::startMiniPauseTimer(int intervalMinutes)
 {
     m_miniPauseIntervalMs = intervalMinutes * 60 * 1000;
-    m_miniPauseStartMs = QDateTime::currentMSecsSinceEpoch();
     m_miniPauseTimer->start(m_miniPauseIntervalMs);
+}
+
+void TaskScheduler::startBigPauseTimerMs(qint64 delayMs)
+{
+    // Stops warning timer; starts big-pause for the given delay
+    // without modifying the configured m_bigPauseIntervalMs so that
+    // the next resetBigPauseTimer() still uses the original interval.
+    m_warningTimer->stop();
+    m_bigPauseTimer->start(static_cast<int>(delayMs));
+}
+
+void TaskScheduler::startMiniPauseTimerMs(qint64 delayMs)
+{
+    m_miniPauseTimer->start(static_cast<int>(delayMs));
 }
 
 void TaskScheduler::startWarningTimer(int minutesBefore)
 {
-    if (!m_bigPauseTimer->isActive()) return;
+    int remaining = m_bigPauseTimer->remainingTime();
+    if (remaining < 0) return;  // big-pause timer not active
 
-    qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_bigPauseStartMs;
-    qint64 remaining = m_bigPauseIntervalMs - elapsed;
     qint64 warnMs = static_cast<qint64>(minutesBefore) * 60 * 1000;
-    qint64 delay = remaining - warnMs;
+    qint64 delay  = static_cast<qint64>(remaining) - warnMs;
     if (delay > 0) {
         m_warningTimer->start(static_cast<int>(delay));
     } else {
-        // Fire immediately if we're already past warn point
+        // Already past the warn point — fire immediately
         m_warningTimer->start(0);
     }
 }
@@ -51,7 +60,6 @@ void TaskScheduler::startWarningTimer(int minutesBefore)
 void TaskScheduler::resetBigPauseTimer()
 {
     if (m_bigPauseIntervalMs > 0) {
-        m_bigPauseStartMs = QDateTime::currentMSecsSinceEpoch();
         m_bigPauseTimer->start(m_bigPauseIntervalMs);
     }
 }
@@ -59,7 +67,6 @@ void TaskScheduler::resetBigPauseTimer()
 void TaskScheduler::resetMiniPauseTimer()
 {
     if (m_miniPauseIntervalMs > 0) {
-        m_miniPauseStartMs = QDateTime::currentMSecsSinceEpoch();
         m_miniPauseTimer->start(m_miniPauseIntervalMs);
     }
 }
@@ -73,14 +80,12 @@ void TaskScheduler::stopAll()
 
 qint64 TaskScheduler::bigPauseRemainingMs() const
 {
-    if (!m_bigPauseTimer->isActive()) return -1;
-    qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_bigPauseStartMs;
-    return m_bigPauseIntervalMs - elapsed;
+    int r = m_bigPauseTimer->remainingTime();
+    return (r < 0) ? -1LL : static_cast<qint64>(r);
 }
 
 qint64 TaskScheduler::miniPauseRemainingMs() const
 {
-    if (!m_miniPauseTimer->isActive()) return -1;
-    qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_miniPauseStartMs;
-    return m_miniPauseIntervalMs - elapsed;
+    int r = m_miniPauseTimer->remainingTime();
+    return (r < 0) ? -1LL : static_cast<qint64>(r);
 }

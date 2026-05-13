@@ -40,15 +40,15 @@ bool App::init()
 {
     // Single instance check
     m_server = new QLocalServer(this);
-    if (!m_server->listen("CrossEyeLeopApp")) {
+    if (!m_server->listen("CrossEyeLeoApp")) {
         QLocalSocket socket;
-        socket.connectToServer("CrossEyeLeopApp");
+        socket.connectToServer("CrossEyeLeoApp");
         if (socket.waitForConnected(500)) {
             return false;
         }
 
-        QLocalServer::removeServer("CrossEyeLeopApp");
-        if (!m_server->listen("CrossEyeLeopApp")) {
+        QLocalServer::removeServer("CrossEyeLeoApp");
+        if (!m_server->listen("CrossEyeLeoApp")) {
             return false;
         }
     }
@@ -133,6 +133,7 @@ void App::onWarningDue()
     if (m_suspended) return;
 
     qint64 remaining = m_scheduler->bigPauseRemainingMs();
+    if (remaining < 0) remaining = 0;  // clamp: guard against stopped/late timers
     int minutes = static_cast<int>(remaining / 60000) + 1;
 
     if (!m_notificationWindow) {
@@ -144,20 +145,34 @@ void App::onWarningDue()
 
 void App::onUserInactive()
 {
-    // Suspend timers while user is away
+    // Capture remaining time so we can resume from where we left off.
     if (!m_suspended) {
+        m_inactiveBigPauseRemainingMs  = m_scheduler->bigPauseRemainingMs();
+        m_inactiveMiniPauseRemainingMs = m_scheduler->miniPauseRemainingMs();
         m_scheduler->stopAll();
     }
 }
 
 void App::onUserReturned()
 {
-    // Resume timers when user returns
+    // Resume timers from the captured remaining time rather than restarting
+    // the full configured interval, so a brief absence doesn't reset the schedule.
     if (!m_suspended) {
-        if (m_settings->bigPauseEnabled())
-            m_scheduler->startBigPauseTimer(m_settings->bigPauseInterval());
-        if (m_settings->miniPauseEnabled())
-            m_scheduler->startMiniPauseTimer(m_settings->miniPauseInterval());
+        if (m_settings->bigPauseEnabled()) {
+            qint64 delay = (m_inactiveBigPauseRemainingMs > 0)
+                           ? m_inactiveBigPauseRemainingMs
+                           : static_cast<qint64>(m_settings->bigPauseInterval()) * 60 * 1000;
+            m_scheduler->startBigPauseTimerMs(delay);
+            m_scheduler->startWarningTimer(m_settings->warningInterval());
+        }
+        if (m_settings->miniPauseEnabled()) {
+            qint64 delay = (m_inactiveMiniPauseRemainingMs > 0)
+                           ? m_inactiveMiniPauseRemainingMs
+                           : static_cast<qint64>(m_settings->miniPauseInterval()) * 60 * 1000;
+            m_scheduler->startMiniPauseTimerMs(delay);
+        }
+        m_inactiveBigPauseRemainingMs  = -1;
+        m_inactiveMiniPauseRemainingMs = -1;
     }
 }
 
@@ -201,7 +216,10 @@ void App::onBeforePausePostpone()
 {
     if (m_beforePauseWindow) m_beforePauseWindow->hide();
     m_settings->incrementPostponeCount();
-    m_scheduler->startBigPauseTimer(5); // postpone 5 minutes
+    // Delay the next long break by 5 minutes using a one-off timer that does
+    // NOT overwrite the configured m_bigPauseIntervalMs so subsequent breaks
+    // still fire on the original schedule.
+    m_scheduler->startBigPauseTimerMs(5LL * 60 * 1000);
     m_stateMachine->transitionTo(AppState::IDLE);
 }
 
@@ -279,6 +297,9 @@ void App::showMiniPause()
 
 void App::pauseMonitoring(int minutes)
 {
+    // Always stop any pending resume timer before starting a new pause
+    // so an "indefinite" pause is not cut short by a previous timed pause.
+    m_resumeTimer->stop();
     m_suspended = true;
     m_scheduler->stopAll();
     m_trayIcon->setPaused(true);
@@ -291,6 +312,7 @@ void App::pauseMonitoring(int minutes)
 
 void App::resumeMonitoring()
 {
+    m_resumeTimer->stop();  // cancel any pending timed resume
     m_suspended = false;
     m_trayIcon->setPaused(false);
     m_stateMachine->transitionTo(AppState::IDLE);

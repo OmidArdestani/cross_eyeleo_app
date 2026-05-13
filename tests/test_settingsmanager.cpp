@@ -20,8 +20,8 @@ private:
 void TestSettingsManager::initTestCase()
 {
     // Use unique org/app to avoid polluting real settings
-    QCoreApplication::setOrganizationName("CrossEyeLeop_Test");
-    QCoreApplication::setApplicationName("CrossEyeLeopApp_Test");
+    QCoreApplication::setOrganizationName("CrossEyeLeo_Test");
+    QCoreApplication::setApplicationName("CrossEyeLeoApp_Test");
     // Clear any residue left by a previous test run
     QSettings settings;
     settings.clear();

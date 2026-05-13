@@ -70,4 +70,9 @@ private:
     QTimer           *m_resumeTimer{nullptr};
 
     bool              m_suspended{false};
+
+    // Remaining time captured when user goes inactive so timers can be
+    // resumed at the correct position when the user returns.
+    qint64            m_inactiveBigPauseRemainingMs{-1};
+    qint64            m_inactiveMiniPauseRemainingMs{-1};
 };
