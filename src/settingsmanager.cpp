@@ -2,7 +2,7 @@
 
 SettingsManager::SettingsManager(QObject *parent)
     : QObject(parent)
-    , m_qsettings(QSettings::UserScope, "CrossEyeLeop", "CrossEyeLeopApp")
+    , m_qsettings()
 {
 }
 
