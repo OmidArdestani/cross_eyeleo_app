@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDataStream>
+#include <QDebug>
 #include <QObject>
 
 enum class AppState {
@@ -15,10 +16,11 @@ enum class AppState {
     DESTROY
 };
 
-// Explicit QDataStream operators are required so that Q_DECLARE_METATYPE
-// works with GCC for an enum class whose underlying type is 'int'.
-// Without them, GCC cannot resolve whether to use the char or qint32 overload,
-// producing an "ambiguous overload" error during template instantiation.
+// Explicit stream/debug operators are required so that Q_DECLARE_METATYPE
+// and MOC-generated QMetaTypeInterfaceWrapper<AppState> work with GCC.
+// Without them GCC cannot resolve which overload to pick for an enum class
+// whose underlying type is 'int', producing "ambiguous overload" errors.
+
 inline QDataStream &operator<<(QDataStream &ds, AppState v)
 {
     return ds << static_cast<qint32>(v);
@@ -36,6 +38,12 @@ inline QDataStream &operator>>(QDataStream &ds, AppState &v)
         v = AppState::NONE;
     }
     return ds;
+}
+
+inline QDebug operator<<(QDebug dbg, AppState v)
+{
+    dbg.nospace() << "AppState(" << static_cast<int>(v) << ')';
+    return dbg;
 }
 
 Q_DECLARE_METATYPE(AppState)

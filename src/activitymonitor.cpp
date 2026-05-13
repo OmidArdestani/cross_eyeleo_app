@@ -5,6 +5,7 @@
 #elif defined(Q_OS_MAC)
 #  include <CoreGraphics/CGEventSource.h>
 #elif defined(HAVE_XSCRNSAVER)
+// X11 headers are included only here to avoid macro pollution in the header.
 #  include <X11/Xlib.h>
 #  include <X11/extensions/scrnsaver.h>
 #endif
@@ -25,7 +26,7 @@ ActivityMonitor::~ActivityMonitor()
 {
 #if defined(HAVE_XSCRNSAVER)
     if (m_display) {
-        XCloseDisplay(m_display);
+        XCloseDisplay(static_cast<Display *>(m_display));
         m_display = nullptr;
     }
 #endif
@@ -58,8 +59,9 @@ qint64 ActivityMonitor::getIdleTimeMs()
             kCGAnyInputEventType) * 1000);
 #elif defined(HAVE_XSCRNSAVER)
     if (m_display) {
+        Display *dpy = static_cast<Display *>(m_display);
         XScreenSaverInfo *info = XScreenSaverAllocInfo();
-        XScreenSaverQueryInfo(m_display, DefaultRootWindow(m_display), info);
+        XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info);
         qint64 idle = static_cast<qint64>(info->idle);
         XFree(info);
         return idle;
