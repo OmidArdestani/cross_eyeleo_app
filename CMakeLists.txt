@@ -52,7 +52,7 @@ if(CROSSEYELEOP_BUILD_TESTS)
     enable_testing()
 
     add_executable(session_coordinator_tests
-        tests/domain/SessionCoordinatorTests.cpp
+        tests/application/SessionCoordinatorTests.cpp
     )
 
     target_link_libraries(session_coordinator_tests PRIVATE cross_eyeleop_core)
