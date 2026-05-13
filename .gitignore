@@ -22,8 +22,8 @@ ui_*.h
 *.obj
 
 # Binaries
-CrossEyeLeopApp
-CrossEyeLeopApp.exe
+CrossEyeLeoApp
+CrossEyeLeoApp.exe
 *.app/
 
 # Package files

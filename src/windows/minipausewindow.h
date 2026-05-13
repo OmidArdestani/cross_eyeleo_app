@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QFrame>
 #include <QPropertyAnimation>
 #include <QTimer>
 #include <QLabel>
@@ -35,7 +36,7 @@ private slots:
 
 private:
     void setupUi();
-    void positionWindow();
+    void showOnAllScreens();
     void updateImage(const QString &imagePath);
 
     SettingsManager    *m_settings{nullptr};

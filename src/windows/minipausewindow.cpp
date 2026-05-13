@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <QScreen>
+#include <QFrame>
 #include <QVBoxLayout>
 #include <QMouseEvent>
 #include <QSvgRenderer>
@@ -14,7 +15,6 @@ MiniPauseWindow::MiniPauseWindow(SettingsManager *settings, QWidget *parent)
 {
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     setAttribute(Qt::WA_TranslucentBackground);
-    setFixedSize(450, 320);
 
     setupUi();
 
@@ -36,35 +36,44 @@ MiniPauseWindow::MiniPauseWindow(SettingsManager *settings, QWidget *parent)
 
 void MiniPauseWindow::setupUi()
 {
-    setStyleSheet(
-        "background-color: rgba(30,30,40,230); "
-        "border-radius: 12px;");
+    // Full-screen dark-transparent overlay (same pattern as BigPauseWindow)
+    setStyleSheet("background-color: rgba(0,0,0,170);");
 
-    QVBoxLayout *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(20, 20, 20, 20);
+    QVBoxLayout *outerLayout = new QVBoxLayout(this);
+    outerLayout->setAlignment(Qt::AlignCenter);
+    outerLayout->setContentsMargins(0, 0, 0, 0);
+
+    // Centred card panel
+    QFrame *card = new QFrame(this);
+    card->setFixedSize(480, 340);
+    card->setStyleSheet(
+        "QFrame { background-color: rgba(30,30,45,230); border-radius: 16px; }");
+
+    QVBoxLayout *layout = new QVBoxLayout(card);
+    layout->setContentsMargins(24, 24, 24, 24);
     layout->setSpacing(10);
 
-    m_exerciseNameLabel = new QLabel(this);
+    m_exerciseNameLabel = new QLabel(card);
     m_exerciseNameLabel->setAlignment(Qt::AlignCenter);
     QFont nameFont = m_exerciseNameLabel->font();
-    nameFont.setPointSize(16);
+    nameFont.setPointSize(18);
     nameFont.setBold(true);
     m_exerciseNameLabel->setFont(nameFont);
     m_exerciseNameLabel->setStyleSheet("color: white;");
 
-    m_imageLabel = new QLabel(this);
+    m_imageLabel = new QLabel(card);
     m_imageLabel->setAlignment(Qt::AlignCenter);
     m_imageLabel->setFixedSize(120, 120);
 
-    m_instructionLabel = new QLabel(this);
+    m_instructionLabel = new QLabel(card);
     m_instructionLabel->setAlignment(Qt::AlignCenter);
     m_instructionLabel->setWordWrap(true);
-    m_instructionLabel->setStyleSheet("color: rgba(255,255,255,200); font-size: 12px;");
+    m_instructionLabel->setStyleSheet("color: rgba(255,255,255,200); font-size: 13px;");
 
-    m_timerLabel = new QLabel("0:20", this);
+    m_timerLabel = new QLabel("0:20", card);
     m_timerLabel->setAlignment(Qt::AlignCenter);
     QFont timerFont = m_timerLabel->font();
-    timerFont.setPointSize(22);
+    timerFont.setPointSize(28);
     timerFont.setBold(true);
     m_timerLabel->setFont(timerFont);
     m_timerLabel->setStyleSheet("color: #4fc3f7;");
@@ -73,15 +82,18 @@ void MiniPauseWindow::setupUi()
     layout->addWidget(m_imageLabel, 0, Qt::AlignCenter);
     layout->addWidget(m_instructionLabel);
     layout->addWidget(m_timerLabel);
+
+    outerLayout->addWidget(card);
 }
 
-void MiniPauseWindow::positionWindow()
+void MiniPauseWindow::showOnAllScreens()
 {
-    QScreen *screen = QApplication::primaryScreen();
-    QRect sg = screen->availableGeometry();
-    int x = sg.center().x() - width() / 2;
-    int y = sg.bottom() - height() - 40;
-    move(x, y);
+    QRect totalGeometry;
+    const auto screens = QApplication::screens();
+    for (QScreen *screen : screens) {
+        totalGeometry = totalGeometry.united(screen->geometry());
+    }
+    setGeometry(totalGeometry);
 }
 
 void MiniPauseWindow::updateImage(const QString &imagePath)
@@ -111,7 +123,7 @@ void MiniPauseWindow::setExercise(ExerciseType type, int durationSeconds)
 
 void MiniPauseWindow::showWithAnimation()
 {
-    positionWindow();
+    showOnAllScreens();
     setWindowOpacity(0.0);
     QWidget::show();
     m_showAnim->start();
