@@ -43,8 +43,14 @@ bool App::init()
     if (!m_server->listen("CrossEyeLeopApp")) {
         QLocalSocket socket;
         socket.connectToServer("CrossEyeLeopApp");
-        socket.waitForConnected(500);
-        return false;
+        if (socket.waitForConnected(500)) {
+            return false;
+        }
+
+        QLocalServer::removeServer("CrossEyeLeopApp");
+        if (!m_server->listen("CrossEyeLeopApp")) {
+            return false;
+        }
     }
 
     m_settings->load();
