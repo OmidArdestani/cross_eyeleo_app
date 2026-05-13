@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Left eye - tightly closed -->
+  <path d="M27 105 Q65 88 103 105 Q65 122 27 105Z" fill="#ffccbc" stroke="#333" stroke-width="2.5"/>
+  <path d="M27 105 Q65 88 103 105" fill="none" stroke="#333" stroke-width="2.5"/>
+  <!-- Squint lines left -->
+  <line x1="30" y1="98" x2="22" y2="90" stroke="#666" stroke-width="1.5"/>
+  <line x1="40" y1="94" x2="36" y2="85" stroke="#666" stroke-width="1.5"/>
+  <!-- Right eye - tightly closed -->
+  <path d="M97 105 Q135 88 173 105 Q135 122 97 105Z" fill="#ffccbc" stroke="#333" stroke-width="2.5"/>
+  <path d="M97 105 Q135 88 173 105" fill="none" stroke="#333" stroke-width="2.5"/>
+  <!-- Squint lines right -->
+  <line x1="170" y1="98" x2="178" y2="90" stroke="#666" stroke-width="1.5"/>
+  <line x1="160" y1="94" x2="164" y2="85" stroke="#666" stroke-width="1.5"/>
+</svg>

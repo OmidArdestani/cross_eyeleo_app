@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.0'
+          modules: 'qtmultimedia'
+      - name: Install dependencies
+        run: sudo apt-get install -y libxss-dev
+      - name: Build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+          cmake --build build --parallel
+          cd build && cpack -G DEB
+          cd build && cpack -G TGZ
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/*.deb
+            build/*.tar.gz
+
+  release-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.0'
+          modules: 'qtmultimedia'
+      - name: Build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release --parallel
+          cd build && cpack -C Release -G ZIP
+      - name: Deploy Qt
+        run: windeployqt build/Release/CrossEyeLeopApp.exe
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*.zip
+
+  release-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.0'
+          modules: 'qtmultimedia'
+      - name: Build
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --parallel
+          macdeployqt build/CrossEyeLeopApp.app -dmg
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/*.dmg
