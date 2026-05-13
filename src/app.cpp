@@ -76,8 +76,10 @@ bool App::init()
     connect(m_settings, &SettingsManager::settingsChanged, this, &App::onSettingsChanged);
 
     // Start timers
-    if (m_settings->bigPauseEnabled())
+    if (m_settings->bigPauseEnabled()) {
         m_scheduler->startBigPauseTimer(m_settings->bigPauseInterval());
+        m_scheduler->startWarningTimer(m_settings->warningInterval());
+    }
     if (m_settings->miniPauseEnabled())
         m_scheduler->startMiniPauseTimer(m_settings->miniPauseInterval());
 
