@@ -1,0 +1,14 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource prefix="/">
+    <file>icons/app_icon.svg</file>
+    <file>icons/app_icon_gray.svg</file>
+    <file>images/exercise_roll.svg</file>
+    <file>images/exercise_look_horz.svg</file>
+    <file>images/exercise_look_vert.svg</file>
+    <file>images/exercise_blink.svg</file>
+    <file>images/exercise_close_tightly.svg</file>
+    <file>images/exercise_window.svg</file>
+    <file>images/exercise_stretch.svg</file>
+  </qresource>
+</RCC>

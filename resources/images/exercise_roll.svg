@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Eye -->
+  <ellipse cx="100" cy="100" rx="55" ry="32" fill="white" stroke="#333" stroke-width="2.5"/>
+  <circle cx="100" cy="100" r="20" fill="#1976D2"/>
+  <circle cx="100" cy="100" r="10" fill="#111"/>
+  <circle cx="93" cy="93" r="4" fill="white" opacity="0.8"/>
+  <!-- Circular arrow -->
+  <path d="M100 55 A45 45 0 1 1 55 100" fill="none" stroke="#E53935" stroke-width="4" stroke-linecap="round"/>
+  <polygon points="55,90 45,105 65,105" fill="#E53935"/>
+</svg>

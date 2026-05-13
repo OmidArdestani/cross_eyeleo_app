@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Left eye - half closed (blinking) -->
+  <ellipse cx="65" cy="105" rx="38" ry="22" fill="white" stroke="#333" stroke-width="2"/>
+  <ellipse cx="65" cy="105" rx="38" ry="11" fill="#b0bec5" stroke="#333" stroke-width="2"/>
+  <circle cx="65" cy="108" r="10" fill="#1976D2"/>
+  <circle cx="65" cy="108" r="5" fill="#111"/>
+  <!-- Right eye - half closed (blinking) -->
+  <ellipse cx="135" cy="105" rx="38" ry="22" fill="white" stroke="#333" stroke-width="2"/>
+  <ellipse cx="135" cy="105" rx="38" ry="11" fill="#b0bec5" stroke="#333" stroke-width="2"/>
+  <circle cx="135" cy="108" r="10" fill="#1976D2"/>
+  <circle cx="135" cy="108" r="5" fill="#111"/>
+  <!-- Eyelid lines -->
+  <path d="M27 105 Q65 83 103 105" fill="none" stroke="#333" stroke-width="2.5"/>
+  <path d="M97 105 Q135 83 173 105" fill="none" stroke="#333" stroke-width="2.5"/>
+</svg>

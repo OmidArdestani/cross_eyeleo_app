@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Left eye -->
+  <ellipse cx="65" cy="105" rx="38" ry="22" fill="white" stroke="#333" stroke-width="2"/>
+  <circle cx="65" cy="105" r="13" fill="#1976D2"/>
+  <circle cx="65" cy="105" r="6" fill="#111"/>
+  <circle cx="60" cy="100" r="3" fill="white" opacity="0.8"/>
+  <!-- Right eye -->
+  <ellipse cx="135" cy="105" rx="38" ry="22" fill="white" stroke="#333" stroke-width="2"/>
+  <circle cx="135" cy="105" r="13" fill="#1976D2"/>
+  <circle cx="135" cy="105" r="6" fill="#111"/>
+  <circle cx="130" cy="100" r="3" fill="white" opacity="0.8"/>
+  <!-- Left arrow -->
+  <line x1="55" y1="105" x2="20" y2="105" stroke="#E53935" stroke-width="3.5" stroke-linecap="round"/>
+  <polygon points="15,105 25,99 25,111" fill="#E53935"/>
+  <!-- Right arrow -->
+  <line x1="145" y1="105" x2="180" y2="105" stroke="#E53935" stroke-width="3.5" stroke-linecap="round"/>
+  <polygon points="185,105 175,99 175,111" fill="#E53935"/>
+</svg>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>CrossEyeLeoApp</DisplayName>
+    <Description>Cross-platform eye exercise reminder application</Description>
+    <Version>@@VERSION@@</Version>
+    <ReleaseDate>@@RELEASEDATE@@</ReleaseDate>
+    <Default>true</Default>
+    <ForcedInstallation>true</ForcedInstallation>
+    <Script>installscript.qs</Script>
+    <Licenses>
+        <License name="MIT License" file="license.txt" />
+    </Licenses>
+</Package>
