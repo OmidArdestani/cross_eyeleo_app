@@ -1,0 +1,18 @@
+Start testing: May 13 10:21 UTC
+----------------------------------------------------------
+1/1 Testing: domain_policy_tests
+1/1 Test: domain_policy_tests
+Command: "/home/runner/work/cross_eyeleop_app/cross_eyeleop_app/build-test/domain_policy_tests"
+Directory: /home/runner/work/cross_eyeleop_app/cross_eyeleop_app/build-test
+"domain_policy_tests" start time: May 13 10:21 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"domain_policy_tests" end time: May 13 10:21 UTC
+"domain_policy_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: May 13 10:21 UTC

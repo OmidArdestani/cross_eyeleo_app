@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/domain_policy_tests.dir/link.d CMakeFiles/domain_policy_tests.dir/domain_policy_tests_autogen/mocs_compilation.cpp.o CMakeFiles/domain_policy_tests.dir/tests/domain/SessionCoordinatorTests.cpp.o -o domain_policy_tests  libcross_eyeleop_core.a

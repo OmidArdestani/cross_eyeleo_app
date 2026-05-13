@@ -1,0 +1,2 @@
+/usr/bin/ar qc libcross_eyeleop_core.a CMakeFiles/cross_eyeleop_core.dir/src/domain/policies/BreakSchedulePolicy.cpp.o CMakeFiles/cross_eyeleop_core.dir/src/domain/services/SessionStateMachine.cpp.o CMakeFiles/cross_eyeleop_core.dir/src/application/services/SessionCoordinator.cpp.o
+/usr/bin/ranlib libcross_eyeleop_core.a
