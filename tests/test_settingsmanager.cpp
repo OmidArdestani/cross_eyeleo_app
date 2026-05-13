@@ -23,9 +23,9 @@ void TestSettingsManager::initTestCase()
     QCoreApplication::setOrganizationName("CrossEyeLeop_Test");
     QCoreApplication::setApplicationName("CrossEyeLeopApp_Test");
     // Clear any residue left by a previous test run
-    QSettings qs;
-    qs.clear();
-    qs.sync();
+    QSettings settings;
+    settings.clear();
+    settings.sync();
     m_settings = new SettingsManager();
 }
 
@@ -34,9 +34,9 @@ void TestSettingsManager::cleanupTestCase()
     delete m_settings;
     m_settings = nullptr;
     // Remove all keys written during this test run
-    QSettings qs;
-    qs.clear();
-    qs.sync();
+    QSettings settings;
+    settings.clear();
+    settings.sync();
 }
 
 void TestSettingsManager::testDefaultValues()
