@@ -72,13 +72,23 @@ function stopRunningApp() {
 }
 
 // ------------------------------------------------------------------
-// Helper: run the maintenance tool to cleanly uninstall the previous
-// installation.  "purge" performs a fully silent, no-UI uninstall
-// (IFW 4.3+).
+// Helper: remove the previous installation from targetDir.
 //
-// The path is passed as a direct OS argument array (not through a
-// shell), so target directories containing spaces work correctly.
-// Returns silently if no previous installation exists.
+// Two-step strategy:
+//
+//   Step 1 – run the maintenance tool with "--unattended purge" so IFW
+//   can clean up registry entries, Start-Menu shortcuts, and component
+//   metadata without showing any UI.  "--unattended" is required because
+//   "purge" alone can still prompt on some IFW builds.
+//
+//   Step 2 – forcefully delete the directory with an OS command.  This
+//   is necessary because on Windows the maintenance tool executable
+//   cannot delete itself while it is running, so it always leaves the
+//   directory behind.  On all platforms this step also handles the case
+//   where Step 1 failed or was not available (IFW < 4.3).
+//
+// Both steps are wrapped in try/catch so a first-time install (no
+// maintenance tool, no existing directory) silently no-ops.
 // ------------------------------------------------------------------
 function purgePreviousInstallation(targetDir) {
     if (!targetDir) return;
@@ -88,24 +98,48 @@ function purgePreviousInstallation(targetDir) {
         if (targetDir.charAt(0) !== "/") return;
     }
 
+    // Step 1: run the maintenance tool to remove registry/shortcut metadata.
+    var mtPath;
+    if (systemInfo.productType === "windows") {
+        mtPath = targetDir + "\\CrossEyeLeoAppMaintenanceTool.exe";
+    } else if (systemInfo.productType === "osx") {
+        mtPath = targetDir + "/CrossEyeLeoAppMaintenanceTool.app" +
+                             "/Contents/MacOS/CrossEyeLeoAppMaintenanceTool";
+    } else {
+        mtPath = targetDir + "/CrossEyeLeoAppMaintenanceTool";
+    }
+
+    if (installer.fileExists(mtPath)) {
+        try {
+            // --unattended suppresses all dialogs; purge removes all components.
+            installer.execute(mtPath, ["--unattended", "purge"]);
+        } catch (e) {
+            console.log("Maintenance tool purge failed (continuing with directory removal): " + e);
+        }
+    }
+
+    // Step 2: forcefully remove the directory so the new installation starts
+    // with a completely clean slate.  On Windows the maintenance tool cannot
+    // delete itself while running, so this step is always required.
     try {
         if (systemInfo.productType === "windows") {
-            installer.execute(
-                targetDir + "\\CrossEyeLeoAppMaintenanceTool.exe", ["purge"]
-            );
-        } else if (systemInfo.productType === "osx") {
-            installer.execute(
-                targetDir + "/CrossEyeLeoAppMaintenanceTool.app" +
-                            "/Contents/MacOS/CrossEyeLeoAppMaintenanceTool",
-                ["purge"]
-            );
+            // targetDir is validated above to start with a drive letter (e.g. C:\).
+            // Additionally reject any cmd.exe metacharacters (&, |, ^, !, %, <, >)
+            // that could cause command injection when the path is embedded in a
+            // "cmd /C rd ..." string.  Windows paths cannot legally contain most of
+            // these, but % and ^ are technically allowed; guard against them here.
+            if (/[&|^!%<>"]/.test(targetDir)) {
+                console.log("Directory removal skipped: path contains characters " +
+                            "unsafe for shell embedding: " + targetDir);
+            } else {
+                installer.execute("cmd.exe",
+                    ["/C", "rd /S /Q \"" + targetDir + "\""]);
+            }
         } else {
-            installer.execute(
-                targetDir + "/CrossEyeLeoAppMaintenanceTool", ["purge"]
-            );
+            installer.execute("rm", ["-rf", targetDir]);
         }
     } catch (e) {
-        console.log("purgePreviousInstallation failed (" + systemInfo.productType +
+        console.log("Directory removal failed (" + systemInfo.productType +
                     ", targetDir=" + targetDir + "): " + e);
     }
 }
