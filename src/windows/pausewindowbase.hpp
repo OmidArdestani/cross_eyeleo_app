@@ -74,7 +74,14 @@ protected slots:
 protected:
     virtual void init()
     {
+        // On macOS, Qt::Tool creates an NSPanel which is hidden when the app
+        // is not the active foreground process (tray apps are never active).
+        // Use Qt::Window so the pause windows always appear on top.
+#ifdef Q_OS_MACOS
+        setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Window);
+#else
         setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
+#endif
         // Do NOT set WA_TranslucentBackground: the overlay must be fully
         // opaque so the desktop is completely hidden and inaccessible.
         setWindowModality(Qt::ApplicationModal);

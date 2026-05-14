@@ -1,4 +1,5 @@
 #include "minipausewindow.h"
+#include "platform/mac_utils.h"
 #include "settingsmanager.h"
 
 #include <QApplication>
@@ -84,7 +85,12 @@ void MiniPauseWindow::showWithAnimation(QScreen *screen)
     else
         showOnPrimaryScreen();
     setWindowOpacity(0.0);
+#ifdef Q_OS_MACOS
+    mac_activateApplication();
+#endif
     QWidget::show();
+    raise();
+    activateWindow();
     m_showAnim->start();
     m_countdown->start();
     m_animWidget->startAnimation();
