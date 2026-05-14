@@ -37,6 +37,10 @@ if(CROSSEYELEO_BUILD_APP)
         ${APP_SOURCES}
     )
 
+    if(APPLE)
+        target_sources(CrossEyeLeoApp PRIVATE src/platform/mac_utils.mm)
+    endif()
+
     target_include_directories(CrossEyeLeoApp PRIVATE src)
 
     # APP_VERSION can be supplied from the command line (e.g. by CI using the
@@ -56,6 +60,11 @@ if(CROSSEYELEO_BUILD_APP)
         Qt6::Multimedia
         Qt6::Svg
     )
+
+    if(APPLE)
+        find_library(APPKIT_LIBRARY AppKit REQUIRED)
+        target_link_libraries(CrossEyeLeoApp PRIVATE ${APPKIT_LIBRARY})
+    endif()
 
     if(WIN32)
         target_link_libraries(CrossEyeLeoApp PRIVATE user32)
