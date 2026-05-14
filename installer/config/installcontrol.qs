@@ -35,21 +35,23 @@ function Controller() {
 }
 
 // ------------------------------------------------------------------
-// Target directory page – silently accept "directory already exists"
-// and "maintenance tool detected" so that reinstalling over a previous
-// installation works without asking the user to pick a different path.
+// Helper: return true if a previous IFW installation of CrossEyeLeoApp
+// exists in the given directory.  Detection is based on the presence
+// of the maintenance tool binary that IFW places there on first install.
 // ------------------------------------------------------------------
-Controller.prototype.TargetDirectoryPageCallback = function() {
-    // Re-affirm all automatic answers in case the message boxes fire after
-    // the constructor (some IFW versions raise them during page validation).
-    installer.setMessageBoxAutomaticAnswer("OverwriteTargetDirectory", QMessageBox.Yes);
-    installer.setMessageBoxAutomaticAnswer("installWarningOverwrite",   QMessageBox.Yes);
-    // maintenanceToolDetected is raised when the target directory already
-    // contains a maintenance tool / IFW metadata from a previous install.
-    // Without this answer the reinstall fails even though OverwriteTargetDirectory
-    // was already being handled.
-    installer.setMessageBoxAutomaticAnswer("maintenanceToolDetected",   QMessageBox.Yes);
-};
+function previousInstallationExists(targetDir) {
+    if (!targetDir) return false;
+    var mtPath;
+    if (systemInfo.productType === "windows") {
+        mtPath = targetDir + "\\CrossEyeLeoAppMaintenanceTool.exe";
+    } else if (systemInfo.productType === "osx") {
+        mtPath = targetDir + "/CrossEyeLeoAppMaintenanceTool.app" +
+                             "/Contents/MacOS/CrossEyeLeoAppMaintenanceTool";
+    } else {
+        mtPath = targetDir + "/CrossEyeLeoAppMaintenanceTool";
+    }
+    return installer.fileExists(mtPath);
+}
 
 // ------------------------------------------------------------------
 // Helper: stop any running instance of the application.
@@ -71,16 +73,14 @@ function stopRunningApp() {
 
 // ------------------------------------------------------------------
 // Helper: run the maintenance tool to cleanly uninstall the previous
-// installation before the new files are copied.
-// "purge" performs a fully silent, no-UI uninstall (IFW 4.3+).
+// installation.  "purge" performs a fully silent, no-UI uninstall
+// (IFW 4.3+).
 //
 // The path is passed as a direct OS argument array (not through a
 // shell), so target directories containing spaces work correctly.
 // Returns silently if no previous installation exists.
 // ------------------------------------------------------------------
 function purgePreviousInstallation(targetDir) {
-    // Require an absolute path before constructing any executable paths,
-    // guarding against an empty or unexpected value from the installer.
     if (!targetDir) return;
     if (systemInfo.productType === "windows") {
         if (!/^[A-Za-z]:\\/.test(targetDir)) return;
@@ -111,19 +111,61 @@ function purgePreviousInstallation(targetDir) {
 }
 
 // ------------------------------------------------------------------
-// Ready to Install page – before the user clicks "Install":
-//   1. Stop any running instance of the app so its files can be
-//      overwritten.
-//   2. Run the existing maintenance tool (if present) to cleanly
-//      remove the previous installation before copying new files.
+// Target directory page
 //
-// Both steps are fire-and-forget: errors are silently ignored so
-// that a first-time install (no running app, no maintenance tool)
-// works exactly the same as a reinstall.
+// When an existing CrossEyeLeoApp installation is detected at the
+// chosen path, the user is asked for confirmation before the running
+// app is stopped and the old installation is removed:
+//
+//   Yes → stop app + purge old installation → user continues normally
+//   No  → Next button is disabled; the user must choose a different
+//          directory.  As soon as they type a path that does NOT
+//          contain a previous installation, Next is re-enabled.
+//
+// This keeps the stop/remove step at the "Installation Folder" wizard
+// page as requested, while always requiring explicit user consent.
 // ------------------------------------------------------------------
-Controller.prototype.ReadyToInstallPageCallback = function() {
-    stopRunningApp();
-    purgePreviousInstallation(installer.value("TargetDir"));
+Controller.prototype.TargetDirectoryPageCallback = function() {
+    // Re-affirm IFW's built-in automatic dialog answers (some IFW versions
+    // raise these after the constructor fires, e.g. during page validation).
+    installer.setMessageBoxAutomaticAnswer("OverwriteTargetDirectory", QMessageBox.Yes);
+    installer.setMessageBoxAutomaticAnswer("installWarningOverwrite",   QMessageBox.Yes);
+    installer.setMessageBoxAutomaticAnswer("maintenanceToolDetected",   QMessageBox.Yes);
+
+    var targetDir = installer.value("TargetDir");
+    if (!previousInstallationExists(targetDir)) return; // First-time install -- nothing to do.
+
+    // An existing installation was found.  Ask the user whether to remove it.
+    var result = QMessageBox.question(
+        "crosseyeleo.reinstallConfirm",
+        "Existing Installation Found",
+        "CrossEyeLeoApp is already installed in:\n\n" +
+        targetDir + "\n\n" +
+        "To install the new version, the running application will be stopped " +
+        "and the existing installation will be removed first.\n\n" +
+        "Do you want to continue?",
+        QMessageBox.Yes | QMessageBox.No
+    );
+
+    if (result === QMessageBox.Yes) {
+        stopRunningApp();
+        purgePreviousInstallation(targetDir);
+        // The directory is now clean; the wizard proceeds when the user clicks Next.
+    } else {
+        // User declined.  Disable Next so they must choose a different path.
+        var nextBtn = gui.button(buttons.NextButton);
+        if (nextBtn) nextBtn.enabled = false;
+
+        // Re-enable Next as soon as the user types a path that has no previous install.
+        // Guard against multiple connections if the user navigates back and forth.
+        var widget = gui.currentPageWidget();
+        if (widget && widget.TargetDirectoryLineEdit && !widget._reinstallListenerAttached) {
+            widget._reinstallListenerAttached = true;
+            widget.TargetDirectoryLineEdit.textChanged.connect(function(newPath) {
+                if (nextBtn) nextBtn.enabled = !previousInstallationExists(newPath);
+            });
+        }
+    }
 };
 
 // ------------------------------------------------------------------
