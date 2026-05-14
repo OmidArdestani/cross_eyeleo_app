@@ -10,6 +10,18 @@ function Controller() {
     // requiring the user to manually choose a different path each time.
     installer.setMessageBoxAutomaticAnswer("OverwriteTargetDirectory", QMessageBox.Yes);
     installer.setMessageBoxAutomaticAnswer("installWarningOverwrite",   QMessageBox.Yes);
+
+    // Set the program to launch after installation (shown as a checkbox on the
+    // Finished page).  Must be set early so IFW knows to show RunItCheckBox.
+    if (systemInfo.productType === "windows") {
+        installer.setValue("RunProgram", "@TargetDir@\\CrossEyeLeoApp.exe");
+    } else if (systemInfo.kernelType === "linux") {
+        installer.setValue("RunProgram", "@TargetDir@/bin/run_crosseyeleo.sh");
+    } else if (systemInfo.productType === "osx") {
+        installer.setValue("RunProgram",
+            "@TargetDir@/CrossEyeLeoApp.app/Contents/MacOS/CrossEyeLeoApp");
+    }
+    installer.setValue("RunProgramDescription", "Launch CrossEyeLeoApp now");
 }
 
 // ------------------------------------------------------------------
@@ -54,6 +66,14 @@ Controller.prototype.IntroductionPageCallback = function() {
 Controller.prototype.FinishedPageCallback = function() {
     var widget = gui.currentPageWidget();
     if (!widget) return;
+
+    // Ensure the "launch after installation" checkbox is visible and ticked.
+    // The label text comes from RunProgramDescription set in the constructor.
+    var runItCheckBox = widget.RunItCheckBox;
+    if (runItCheckBox) {
+        runItCheckBox.visible = true;
+        runItCheckBox.checked = true;
+    }
 
     var label = widget.MessageLabel;
     if (!label) return;
