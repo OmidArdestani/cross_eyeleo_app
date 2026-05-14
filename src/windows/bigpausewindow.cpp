@@ -7,28 +7,11 @@
 #include <QHBoxLayout>
 
 BigPauseWindow::BigPauseWindow(SettingsManager *settings, QWidget *parent)
-    : QWidget(parent)
-    , m_settings(settings)
+    : PauseWindowBase(settings, parent)
 {
-    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
-    setAttribute(Qt::WA_TranslucentBackground);
+    init();
 
     setupUi();
-
-    m_showAnim = new QPropertyAnimation(this, "windowOpacity", this);
-    m_showAnim->setDuration(700);
-    m_showAnim->setStartValue(0.0);
-    m_showAnim->setEndValue(1.0);
-
-    m_hideAnim = new QPropertyAnimation(this, "windowOpacity", this);
-    m_hideAnim->setDuration(700);
-    m_hideAnim->setStartValue(1.0);
-    m_hideAnim->setEndValue(0.0);
-    connect(m_hideAnim, &QPropertyAnimation::finished, this, &BigPauseWindow::onHideFinished);
-
-    m_countdown = new QTimer(this);
-    m_countdown->setInterval(1000);
-    connect(m_countdown, &QTimer::timeout, this, &BigPauseWindow::onTick);
 }
 
 void BigPauseWindow::setupUi()
@@ -87,16 +70,6 @@ void BigPauseWindow::setupUi()
     layout->addStretch();
 
     setStyleSheet("background-color: rgba(0,0,0,180);");
-}
-
-void BigPauseWindow::showOnAllScreens()
-{
-    QRect totalGeometry;
-    const auto screens = QApplication::screens();
-    for (QScreen *screen : screens) {
-        totalGeometry = totalGeometry.united(screen->geometry());
-    }
-    setGeometry(totalGeometry);
 }
 
 void BigPauseWindow::startCountdown(int durationSeconds)

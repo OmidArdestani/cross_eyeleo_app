@@ -21,7 +21,7 @@ protected:
 
 private slots:
     void onAutoHide();
-    void onHideFinished();
+    void onHideFinished() ;
 
 private:
     void setupUi();
