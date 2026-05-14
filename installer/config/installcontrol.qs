@@ -35,6 +35,19 @@ function Controller() {
 }
 
 // ------------------------------------------------------------------
+// Helper: normalise a Windows path to use forward slashes.
+// IFW on Windows provides paths with forward slashes regardless of what
+// the user types, so we normalise before joining to avoid mixed separators.
+// On non-Windows platforms this is a no-op.
+// ------------------------------------------------------------------
+function normalisePath(p) {
+    if (systemInfo.productType === "windows") {
+        return p.replace(/\\/g, "/");
+    }
+    return p;
+}
+
+// ------------------------------------------------------------------
 // Helper: return true if a previous IFW installation of CrossEyeLeoApp
 // exists in the given directory.  Detection is based on the presence
 // of the maintenance tool binary that IFW places there on first install.
@@ -44,14 +57,17 @@ function previousInstallationExists(targetDir) {
         console.log("[CEL] previousInstallationExists: targetDir is empty/null");
         return false;
     }
+    // Normalise to forward slashes so path joins are consistent with how
+    // IFW itself reports paths on Windows.
+    var dir = normalisePath(targetDir);
     var mtPath;
     if (systemInfo.productType === "windows") {
-        mtPath = targetDir + "\\CrossEyeLeoAppMaintenanceTool.exe";
+        mtPath = dir + "/CrossEyeLeoAppMaintenanceTool.exe";
     } else if (systemInfo.productType === "osx") {
-        mtPath = targetDir + "/CrossEyeLeoAppMaintenanceTool.app" +
-                             "/Contents/MacOS/CrossEyeLeoAppMaintenanceTool";
+        mtPath = dir + "/CrossEyeLeoAppMaintenanceTool.app" +
+                       "/Contents/MacOS/CrossEyeLeoAppMaintenanceTool";
     } else {
-        mtPath = targetDir + "/CrossEyeLeoAppMaintenanceTool";
+        mtPath = dir + "/CrossEyeLeoAppMaintenanceTool";
     }
     var exists = installer.fileExists(mtPath);
     console.log("[CEL] previousInstallationExists: checking " + mtPath +
@@ -114,16 +130,22 @@ function purgePreviousInstallation(targetDir) {
         console.log("[CEL] purgePreviousInstallation: targetDir is empty, aborting");
         return;
     }
+
+    // Normalise to forward slashes (IFW on Windows uses forward slashes).
+    var dir = normalisePath(targetDir);
+    console.log("[CEL] purgePreviousInstallation: normalised dir=" + dir);
+
     if (systemInfo.productType === "windows") {
-        if (!/^[A-Za-z]:\\/.test(targetDir)) {
+        // Accept both C:/ and C:\ as the path start (IFW always gives C:/).
+        if (!/^[A-Za-z]:[/\\]/.test(dir)) {
             console.log("[CEL] purgePreviousInstallation: path does not start with " +
-                        "a drive letter, aborting: " + targetDir);
+                        "a drive letter, aborting: " + dir);
             return;
         }
     } else {
-        if (targetDir.charAt(0) !== "/") {
+        if (dir.charAt(0) !== "/") {
             console.log("[CEL] purgePreviousInstallation: path does not start with " +
-                        "/, aborting: " + targetDir);
+                        "/, aborting: " + dir);
             return;
         }
     }
@@ -131,12 +153,12 @@ function purgePreviousInstallation(targetDir) {
     // Step 1: run the maintenance tool to remove registry/shortcut metadata.
     var mtPath;
     if (systemInfo.productType === "windows") {
-        mtPath = targetDir + "\\CrossEyeLeoAppMaintenanceTool.exe";
+        mtPath = dir + "/CrossEyeLeoAppMaintenanceTool.exe";
     } else if (systemInfo.productType === "osx") {
-        mtPath = targetDir + "/CrossEyeLeoAppMaintenanceTool.app" +
-                             "/Contents/MacOS/CrossEyeLeoAppMaintenanceTool";
+        mtPath = dir + "/CrossEyeLeoAppMaintenanceTool.app" +
+                       "/Contents/MacOS/CrossEyeLeoAppMaintenanceTool";
     } else {
-        mtPath = targetDir + "/CrossEyeLeoAppMaintenanceTool";
+        mtPath = dir + "/CrossEyeLeoAppMaintenanceTool";
     }
 
     console.log("[CEL] purgePreviousInstallation: Step 1 - checking for maintenance tool at " +
@@ -164,27 +186,24 @@ function purgePreviousInstallation(targetDir) {
     console.log("[CEL] purgePreviousInstallation: Step 2 - forceful directory removal");
     try {
         if (systemInfo.productType === "windows") {
-            // targetDir is validated above to start with a drive letter (e.g. C:\).
             // Additionally reject any cmd.exe metacharacters (&, |, ^, !, %, <, >)
             // and double quotes that could cause command injection when the path is
-            // embedded in a "cmd /C rd ..." string.  The double-quote check also
-            // prevents a closing-quote injection attack (e.g. a path ending with `"`
-            // that would terminate our quote and inject further commands).
-            // Windows paths cannot legally contain most of these characters, but %,
-            // ^, and " are technically allowed; guard against all of them here.
-            if (/[&|^!%<>\"]/.test(targetDir)) {
+            // embedded in a "cmd /C rd ..." string.
+            if (/[&|^!%<>\"]/.test(dir)) {
                 console.log("[CEL] purgePreviousInstallation: directory removal skipped - " +
-                            "path contains characters unsafe for shell embedding: " + targetDir);
+                            "path contains characters unsafe for shell embedding: " + dir);
             } else {
-                var rdCmd = "rd /S /Q \"" + targetDir + "\"";
+                // Convert to backslashes for cmd.exe reliability.
+                var cmdDir = dir.replace(/\//g, "\\");
+                var rdCmd = "rd /S /Q \"" + cmdDir + "\"";
                 console.log("[CEL] purgePreviousInstallation: running cmd.exe /C " + rdCmd);
                 var rdResult = installer.execute("cmd.exe", ["/C", rdCmd]);
                 console.log("[CEL] purgePreviousInstallation: rd exit code=" +
                             (rdResult ? rdResult[0] : "n/a"));
             }
         } else {
-            console.log("[CEL] purgePreviousInstallation: running rm -rf " + targetDir);
-            var rmResult = installer.execute("rm", ["-rf", targetDir]);
+            console.log("[CEL] purgePreviousInstallation: running rm -rf " + dir);
+            var rmResult = installer.execute("rm", ["-rf", dir]);
             console.log("[CEL] purgePreviousInstallation: rm exit code=" +
                         (rmResult ? rmResult[0] : "n/a"));
         }
@@ -193,7 +212,7 @@ function purgePreviousInstallation(targetDir) {
     }
 
     // Verify the directory is actually gone.
-    var dirStillExists = installer.fileExists(targetDir);
+    var dirStillExists = installer.fileExists(dir);
     console.log("[CEL] purgePreviousInstallation: done - directory still exists after removal: " +
                 dirStillExists);
 }
