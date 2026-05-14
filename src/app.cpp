@@ -14,6 +14,7 @@
 
 #include <QApplication>
 #include <QLocalSocket>
+#include <QMessageBox>
 
 App::App(QObject *parent)
     : QObject(parent)
@@ -64,6 +65,7 @@ bool App::init()
 
     // Connect tray signals
     connect(m_trayIcon, &TrayIcon::settingsRequested,  this, &App::showSettings);
+    connect(m_trayIcon, &TrayIcon::aboutRequested,     this, &App::showAbout);
     connect(m_trayIcon, &TrayIcon::pauseRequested,     this, &App::onPauseRequested);
     connect(m_trayIcon, &TrayIcon::resumeRequested,    this, &App::onResumeRequested);
     connect(m_trayIcon, &TrayIcon::longBreakRequested, this, &App::onLongBreakRequested);
@@ -189,6 +191,23 @@ void App::showSettings()
     m_settingsWindow->show();
     m_settingsWindow->raise();
     m_settingsWindow->activateWindow();
+}
+
+void App::showAbout()
+{
+    QMessageBox about;
+    about.setWindowTitle(tr("About CrossEyeLeoApp"));
+    about.setTextFormat(Qt::RichText);
+    about.setText(
+        "<b>CrossEyeLeoApp</b> v1.0.0<br/>"
+        "A cross-platform eye exercise reminder.<br/><br/>"
+        "<b>Developer:</b> Omid Ardestani<br/>"
+        "Email: <a href=\"mailto:omid.91wo@gmail.com\">omid.91wo@gmail.com</a><br/>"
+        "LinkedIn: <a href=\"https://www.linkedin.com/in/omidardestani/\">linkedin.com/in/omidardestani</a><br/>"
+        "GitHub: <a href=\"https://github.com/OmidArdestani\">github.com/OmidArdestani</a>"
+    );
+    about.setStandardButtons(QMessageBox::Ok);
+    about.exec();
 }
 
 void App::onPauseRequested(int minutes)

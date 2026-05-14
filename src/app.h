@@ -33,6 +33,7 @@ private slots:
     void onUserReturned();
 
     void showSettings();
+    void showAbout();
     void onPauseRequested(int minutes);
     void onResumeRequested();
     void onLongBreakRequested();

@@ -22,6 +22,7 @@ public:
 
 signals:
     void settingsRequested();
+    void aboutRequested();
     void pauseRequested(int minutes); // 0 = indefinitely
     void resumeRequested();
     void longBreakRequested();
