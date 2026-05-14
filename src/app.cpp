@@ -11,6 +11,7 @@
 #include "windows/notificationwindow.h"
 #include "windows/beforepausewindow.h"
 #include "exercises/exercisemanager.h"
+#include "appversion.h"
 
 #include <QApplication>
 #include <QScreen>
@@ -200,7 +201,7 @@ void App::showAbout()
     about.setWindowTitle(tr("About CrossEyeLeoApp"));
     about.setTextFormat(Qt::RichText);
     about.setText(
-        "<b>CrossEyeLeoApp</b> v1.0.0<br/>"
+        "<b>CrossEyeLeoApp</b> v" + AppVersion::get() + "<br/>"
         "A cross-platform eye exercise reminder.<br/><br/>"
         "<b>Developer:</b> Omid Ardestani<br/>"
         "Email: <a href=\"mailto:omid.91wo@gmail.com\">omid.91wo@gmail.com</a><br/>"

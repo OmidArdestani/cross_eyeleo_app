@@ -1,5 +1,6 @@
 #include "settingswindow.h"
 #include "settingsmanager.h"
+#include "appversion.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -161,7 +162,7 @@ void SettingsWindow::setupInfoTab(QWidget *tab)
     vl->setContentsMargins(16, 16, 16, 16);
 
     QLabel *appLabel = new QLabel(
-        "<b>CrossEyeLeoApp</b> v1.0.0<br/>"
+        "<b>CrossEyeLeoApp</b> v" + AppVersion::get() + "<br/>"
         "A cross-platform eye exercise reminder.", tab);
     appLabel->setAlignment(Qt::AlignCenter);
     vl->addWidget(appLabel);

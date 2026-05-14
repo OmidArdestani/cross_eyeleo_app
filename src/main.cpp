@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     QApplication::setFont(appFont);
 
     QApplication::setApplicationName("CrossEyeLeoApp");
-    QApplication::setApplicationVersion("1.0.0");
+    QApplication::setApplicationVersion(APP_VERSION);
     QApplication::setOrganizationName("CrossEyeLeo");
     QApplication::setOrganizationDomain("crosseyeleo.example.com");
     QApplication::setQuitOnLastWindowClosed(false);
