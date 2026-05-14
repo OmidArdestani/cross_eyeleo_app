@@ -52,6 +52,81 @@ Controller.prototype.TargetDirectoryPageCallback = function() {
 };
 
 // ------------------------------------------------------------------
+// Helper: stop any running instance of the application.
+// Returns silently whether or not the app was running.
+// ------------------------------------------------------------------
+function stopRunningApp() {
+    try {
+        if (systemInfo.productType === "windows") {
+            installer.execute("taskkill", ["/F", "/IM", "CrossEyeLeoApp.exe"]);
+        } else {
+            // pkill is available on both Linux and macOS.
+            // Exit code 1 (no matching process) is normal and silently ignored.
+            installer.execute("pkill", ["-x", "CrossEyeLeoApp"]);
+        }
+    } catch (e) {
+        console.log("stopRunningApp failed (" + systemInfo.productType + "): " + e);
+    }
+}
+
+// ------------------------------------------------------------------
+// Helper: run the maintenance tool to cleanly uninstall the previous
+// installation before the new files are copied.
+// "purge" performs a fully silent, no-UI uninstall (IFW 4.3+).
+//
+// The path is passed as a direct OS argument array (not through a
+// shell), so target directories containing spaces work correctly.
+// Returns silently if no previous installation exists.
+// ------------------------------------------------------------------
+function purgePreviousInstallation(targetDir) {
+    // Require an absolute path before constructing any executable paths,
+    // guarding against an empty or unexpected value from the installer.
+    if (!targetDir) return;
+    if (systemInfo.productType === "windows") {
+        if (!/^[A-Za-z]:\\/.test(targetDir)) return;
+    } else {
+        if (targetDir.charAt(0) !== "/") return;
+    }
+
+    try {
+        if (systemInfo.productType === "windows") {
+            installer.execute(
+                targetDir + "\\CrossEyeLeoAppMaintenanceTool.exe", ["purge"]
+            );
+        } else if (systemInfo.productType === "osx") {
+            installer.execute(
+                targetDir + "/CrossEyeLeoAppMaintenanceTool.app" +
+                            "/Contents/MacOS/CrossEyeLeoAppMaintenanceTool",
+                ["purge"]
+            );
+        } else {
+            installer.execute(
+                targetDir + "/CrossEyeLeoAppMaintenanceTool", ["purge"]
+            );
+        }
+    } catch (e) {
+        console.log("purgePreviousInstallation failed (" + systemInfo.productType +
+                    ", targetDir=" + targetDir + "): " + e);
+    }
+}
+
+// ------------------------------------------------------------------
+// Ready to Install page – before the user clicks "Install":
+//   1. Stop any running instance of the app so its files can be
+//      overwritten.
+//   2. Run the existing maintenance tool (if present) to cleanly
+//      remove the previous installation before copying new files.
+//
+// Both steps are fire-and-forget: errors are silently ignored so
+// that a first-time install (no running app, no maintenance tool)
+// works exactly the same as a reinstall.
+// ------------------------------------------------------------------
+Controller.prototype.ReadyToInstallPageCallback = function() {
+    stopRunningApp();
+    purgePreviousInstallation(installer.value("TargetDir"));
+};
+
+// ------------------------------------------------------------------
 // Introduction page – show description + contact info
 // ------------------------------------------------------------------
 Controller.prototype.IntroductionPageCallback = function() {
