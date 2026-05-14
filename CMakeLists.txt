@@ -25,6 +25,7 @@ if(CROSSEYELEO_BUILD_APP)
         src/windows/pausewindowbase.hpp
         src/windows/bigpausewindow.cpp
         src/windows/minipausewindow.cpp
+        src/windows/exerciseanimationwidget.cpp
         src/windows/notificationwindow.cpp
         src/windows/beforepausewindow.cpp
         src/exercises/exercisemanager.cpp

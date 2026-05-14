@@ -6,8 +6,6 @@
 #include <QFrame>
 #include <QVBoxLayout>
 #include <QMouseEvent>
-#include <QSvgRenderer>
-#include <QPainter>
 
 MiniPauseWindow::MiniPauseWindow(SettingsManager *settings, QWidget *parent)
     : PauseWindowBase(settings, parent)
@@ -44,9 +42,8 @@ void MiniPauseWindow::setupUi()
     m_exerciseNameLabel->setFont(nameFont);
     m_exerciseNameLabel->setStyleSheet("color: white;");
 
-    m_imageLabel = new QLabel(card);
-    m_imageLabel->setAlignment(Qt::AlignCenter);
-    m_imageLabel->setFixedSize(120, 120);
+    m_animWidget = new ExerciseAnimationWidget(card);
+    m_animWidget->setFixedSize(120, 120);
 
     m_instructionLabel = new QLabel(card);
     m_instructionLabel->setAlignment(Qt::AlignCenter);
@@ -62,25 +59,11 @@ void MiniPauseWindow::setupUi()
     m_timerLabel->setStyleSheet("color: #4fc3f7;");
 
     layout->addWidget(m_exerciseNameLabel);
-    layout->addWidget(m_imageLabel, 0, Qt::AlignCenter);
+    layout->addWidget(m_animWidget, 0, Qt::AlignCenter);
     layout->addWidget(m_instructionLabel);
     layout->addWidget(m_timerLabel);
 
     outerLayout->addWidget(card);
-}
-
-void MiniPauseWindow::updateImage(const QString &imagePath)
-{
-    QSvgRenderer renderer(imagePath);
-    if (renderer.isValid()) {
-        QPixmap px(120, 120);
-        px.fill(Qt::transparent);
-        QPainter painter(&px);
-        renderer.render(&painter);
-        m_imageLabel->setPixmap(px);
-    } else {
-        m_imageLabel->setText("👁");
-    }
 }
 
 void MiniPauseWindow::setExercise(ExerciseType type, int durationSeconds)
@@ -88,7 +71,7 @@ void MiniPauseWindow::setExercise(ExerciseType type, int durationSeconds)
     Exercise ex = ExerciseManager::exerciseForType(type);
     m_exerciseNameLabel->setText(ex.name);
     m_instructionLabel->setText(ex.instruction);
-    updateImage(ex.imagePath);
+    m_animWidget->setImage(ex.imagePath);
     m_totalSeconds = durationSeconds;
     m_remaining    = durationSeconds;
     onTick();
@@ -96,16 +79,22 @@ void MiniPauseWindow::setExercise(ExerciseType type, int durationSeconds)
 
 void MiniPauseWindow::showWithAnimation()
 {
-    showOnPrimaryScreen();
+    if (m_settings->strictMode()) {
+        showOnAllScreens();
+    } else {
+        showOnPrimaryScreen();
+    }
     setWindowOpacity(0.0);
     QWidget::show();
     m_showAnim->start();
     m_countdown->start();
+    m_animWidget->startAnimation();
 }
 
 void MiniPauseWindow::hideWithAnimation()
 {
     m_countdown->stop();
+    m_animWidget->stopAnimation();
     m_hideAnim->start();
 }
 

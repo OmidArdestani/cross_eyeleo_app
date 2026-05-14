@@ -41,6 +41,25 @@ protected:
         setGeometry(centeredGeometry);
     }
 
+    // Covers the virtual desktop formed by all connected screens.
+    // Used in strict mode to block access to every monitor.
+    virtual void showOnAllScreens()
+    {
+        const QList<QScreen *> screens = QApplication::screens();
+        if (screens.isEmpty()) {
+            showOnPrimaryScreen();
+            return;
+        }
+
+        QRect virtualDesktop;
+        for (QScreen *screen : screens) {
+            // Use full geometry (including taskbar/dock area) so nothing peeks through.
+            virtualDesktop = virtualDesktop.united(screen->geometry());
+        }
+
+        setGeometry(virtualDesktop);
+    }
+
     virtual void setupOpacityAnim(const int& duration)
     {
         m_showAnim = new QPropertyAnimation(this, "windowOpacity", this);

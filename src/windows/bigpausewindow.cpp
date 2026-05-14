@@ -82,7 +82,11 @@ void BigPauseWindow::startCountdown(int durationSeconds)
 void BigPauseWindow::showWithAnimation()
 {
     m_skipButton->setVisible(!m_settings->strictMode());
-    showOnPrimaryScreen();
+    if (m_settings->strictMode()) {
+        showOnAllScreens();
+    } else {
+        showOnPrimaryScreen();
+    }
     setWindowOpacity(0.0);
     QWidget::show();
     m_showAnim->start();
