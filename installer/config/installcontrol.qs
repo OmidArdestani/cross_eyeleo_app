@@ -5,8 +5,24 @@
 // LinkedIn URL: update "omid-ardestani" below to match your actual profile slug.
 
 function Controller() {
-    // No constructor logic required
+    // Automatically accept the "target directory already exists – overwrite?"
+    // message box so that reinstalling into the same directory works without
+    // requiring the user to manually choose a different path each time.
+    installer.setMessageBoxAutomaticAnswer("OverwriteTargetDirectory", QMessageBox.Yes);
+    installer.setMessageBoxAutomaticAnswer("installWarningOverwrite",   QMessageBox.Yes);
 }
+
+// ------------------------------------------------------------------
+// Target directory page – silently accept "directory already exists"
+// so that reinstalling over a previous installation works without
+// asking the user to pick a different path.
+// ------------------------------------------------------------------
+Controller.prototype.TargetDirectoryPageCallback = function() {
+    // Re-affirm the automatic answer in case the message box fires after
+    // the constructor (some IFW versions raise it during page validation).
+    installer.setMessageBoxAutomaticAnswer("OverwriteTargetDirectory", QMessageBox.Yes);
+    installer.setMessageBoxAutomaticAnswer("installWarningOverwrite",   QMessageBox.Yes);
+};
 
 // ------------------------------------------------------------------
 // Introduction page – show description + contact info
