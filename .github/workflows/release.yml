@@ -26,7 +26,13 @@ jobs:
 
       - name: Build
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCROSSEYELEO_BUILD_APP=ON
+          case "$GITHUB_REF" in
+            refs/tags/*) ;;
+            *) echo "ERROR: Expected a tag ref, got: $GITHUB_REF"; exit 1 ;;
+          esac
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCROSSEYELEO_BUILD_APP=ON \
+                -DAPP_VERSION="${VERSION}"
           cmake --build build --parallel
 
       - name: Stage installer data
@@ -113,8 +119,14 @@ jobs:
           tools: 'tools_ifw'
 
       - name: Build
+        shell: pwsh
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCROSSEYELEO_BUILD_APP=ON
+          if ($env:GITHUB_REF -notlike "refs/tags/*") {
+            Write-Error "ERROR: Expected a tag ref, got: $env:GITHUB_REF"; exit 1
+          }
+          $version = $env:GITHUB_REF -replace "refs/tags/v", ""
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCROSSEYELEO_BUILD_APP=ON `
+                -DAPP_VERSION="$version"
           cmake --build build --config Release --parallel
 
       - name: Stage installer data
@@ -175,7 +187,13 @@ jobs:
 
       - name: Build
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCROSSEYELEO_BUILD_APP=ON
+          case "$GITHUB_REF" in
+            refs/tags/*) ;;
+            *) echo "ERROR: Expected a tag ref, got: $GITHUB_REF"; exit 1 ;;
+          esac
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCROSSEYELEO_BUILD_APP=ON \
+                -DAPP_VERSION="${VERSION}"
           cmake --build build --parallel
 
       - name: Stage installer data

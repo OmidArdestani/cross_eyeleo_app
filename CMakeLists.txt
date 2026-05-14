@@ -39,8 +39,14 @@ if(CROSSEYELEO_BUILD_APP)
 
     target_include_directories(CrossEyeLeoApp PRIVATE src)
 
+    # APP_VERSION can be supplied from the command line (e.g. by CI using the
+    # git tag: -DAPP_VERSION=1.2.0).  Fall back to the project version declared
+    # above for local / dev builds.
+    if(NOT DEFINED APP_VERSION OR APP_VERSION STREQUAL "")
+        set(APP_VERSION "${PROJECT_VERSION}")
+    endif()
     target_compile_definitions(CrossEyeLeoApp PRIVATE
-        APP_VERSION="${PROJECT_VERSION}"
+        APP_VERSION="${APP_VERSION}"
     )
 
     target_link_libraries(CrossEyeLeoApp PRIVATE

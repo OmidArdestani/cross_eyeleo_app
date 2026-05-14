@@ -21,7 +21,7 @@
 
     <!-- Maintenance tool placed alongside the installed app -->
     <MaintenanceToolName>CrossEyeLeoAppMaintenanceTool</MaintenanceToolName>
-    <AllowSpaceInPath>false</AllowSpaceInPath>
+    <AllowSpaceInPath>true</AllowSpaceInPath>
 
     <!-- Custom controller script (Introduction + Finished page branding) -->
     <ControlScript>installcontrol.qs</ControlScript>
