@@ -22,7 +22,7 @@ public:
     explicit MiniPauseWindow(SettingsManager *settings, QWidget *parent = nullptr);
 
     void setExercise(ExerciseType type, int durationSeconds);
-    void showWithAnimation();
+    void showWithAnimation(QScreen *screen = nullptr);
     void hideWithAnimation();
 
 signals:

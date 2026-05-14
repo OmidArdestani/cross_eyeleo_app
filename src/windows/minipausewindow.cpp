@@ -71,19 +71,18 @@ void MiniPauseWindow::setExercise(ExerciseType type, int durationSeconds)
     Exercise ex = ExerciseManager::exerciseForType(type);
     m_exerciseNameLabel->setText(ex.name);
     m_instructionLabel->setText(ex.instruction);
-    m_animWidget->setImage(ex.imagePath);
+    m_animWidget->setExercise(ex.type);
     m_totalSeconds = durationSeconds;
     m_remaining    = durationSeconds;
     onTick();
 }
 
-void MiniPauseWindow::showWithAnimation()
+void MiniPauseWindow::showWithAnimation(QScreen *screen)
 {
-    if (m_settings->strictMode()) {
-        showOnAllScreens();
-    } else {
+    if (screen)
+        showOnScreen(screen);
+    else
         showOnPrimaryScreen();
-    }
     setWindowOpacity(0.0);
     QWidget::show();
     m_showAnim->start();

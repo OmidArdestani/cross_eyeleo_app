@@ -1,37 +1,50 @@
 #pragma once
 
 #include <QWidget>
-#include <QSvgRenderer>
-#include <QPropertyAnimation>
-#include <QSequentialAnimationGroup>
+#include <QTimer>
+#include "exercises/exercisemanager.h"
 
 /**
- * @brief A widget that renders an SVG exercise illustration with a
- *        continuous breathing/pulsing animation to convey that the
- *        exercise is active rather than just showing a still image.
+ * @brief Draws an exercise-specific animation using QPainter at ~30 fps.
+ *
+ * Each ExerciseType has its own drawing function that conveys the actual
+ * movement the user should perform (e.g. eyelid closing/opening for BLINK,
+ * iris tracing a circle for ROLL, etc.).
  */
 class ExerciseAnimationWidget : public QWidget
 {
     Q_OBJECT
-    Q_PROPERTY(qreal animScale READ animScale WRITE setAnimScale)
 
 public:
     explicit ExerciseAnimationWidget(QWidget *parent = nullptr);
 
-    void setImage(const QString &svgPath);
+    void setExercise(ExerciseType type);
     void startAnimation();
     void stopAnimation();
 
     QSize sizeHint() const override { return QSize(120, 120); }
 
-    qreal animScale() const { return m_scale; }
-    void  setAnimScale(qreal scale);
-
 protected:
     void paintEvent(QPaintEvent *event) override;
 
+private slots:
+    void onTimer();
+
 private:
-    QSvgRenderer              *m_renderer{nullptr};
-    QSequentialAnimationGroup *m_animGroup{nullptr};
-    qreal                      m_scale{1.0};
+    // Per-exercise drawing functions
+    void drawBlink(QPainter &p, const QRectF &r);
+    void drawRoll(QPainter &p, const QRectF &r);
+    void drawLookVert(QPainter &p, const QRectF &r);
+    void drawLookHorz(QPainter &p, const QRectF &r);
+    void drawCloseTightly(QPainter &p, const QRectF &r);
+    void drawWindow(QPainter &p, const QRectF &r);
+    void drawStretch(QPainter &p, const QRectF &r);
+
+    // Shared helper: draw one eye with optional iris offset and eyelid close amount.
+    void drawEye(QPainter &p, QPointF center, qreal rx, qreal ry,
+                 qreal irisOx = 0.0, qreal irisOy = 0.0, qreal lidClose = 0.0);
+
+    ExerciseType m_type{ExerciseType::BLINK};
+    QTimer      *m_timer{nullptr};
+    qreal        m_t{0.0};   ///< Animation progress in [0, 1), cycles continuously.
 };

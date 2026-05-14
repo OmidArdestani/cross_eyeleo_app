@@ -43,21 +43,14 @@ protected:
 
     // Covers the virtual desktop formed by all connected screens.
     // Used in strict mode to block access to every monitor.
-    virtual void showOnAllScreens()
+    virtual void showOnScreen(QScreen *screen)
     {
-        const QList<QScreen *> screens = QApplication::screens();
-        if (screens.isEmpty()) {
+        if (!screen) {
             showOnPrimaryScreen();
             return;
         }
-
-        QRect virtualDesktop;
-        for (QScreen *screen : screens) {
-            // Use full geometry (including taskbar/dock area) so nothing peeks through.
-            virtualDesktop = virtualDesktop.united(screen->geometry());
-        }
-
-        setGeometry(virtualDesktop);
+        // Use the full geometry (including taskbar/dock) so nothing peeks through.
+        setGeometry(screen->geometry());
     }
 
     virtual void setupOpacityAnim(const int& duration)

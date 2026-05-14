@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QLocalServer>
+#include <QList>
 #include <QTimer>
 
 class SettingsManager;
@@ -61,8 +62,9 @@ private:
     TrayIcon         *m_trayIcon{nullptr};
 
     SettingsWindow   *m_settingsWindow{nullptr};
-    BigPauseWindow   *m_bigPauseWindow{nullptr};
-    MiniPauseWindow  *m_miniPauseWindow{nullptr};
+    // One window per screen (or one window on primary in non-strict mode).
+    QList<BigPauseWindow*>  m_bigPauseWindows;
+    QList<MiniPauseWindow*> m_miniPauseWindows;
     NotificationWindow *m_notificationWindow{nullptr};
     BeforePauseWindow  *m_beforePauseWindow{nullptr};
 
