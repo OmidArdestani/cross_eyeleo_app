@@ -5,8 +5,36 @@
 // LinkedIn URL: update "omid-ardestani" below to match your actual profile slug.
 
 function Controller() {
-    // No constructor logic required
+    // Automatically accept the "target directory already exists – overwrite?"
+    // message box so that reinstalling into the same directory works without
+    // requiring the user to manually choose a different path each time.
+    installer.setMessageBoxAutomaticAnswer("OverwriteTargetDirectory", QMessageBox.Yes);
+    installer.setMessageBoxAutomaticAnswer("installWarningOverwrite",   QMessageBox.Yes);
+
+    // Set the program to launch after installation (shown as a checkbox on the
+    // Finished page).  Must be set early so IFW knows to show RunItCheckBox.
+    if (systemInfo.productType === "windows") {
+        installer.setValue("RunProgram", "@TargetDir@\\CrossEyeLeoApp.exe");
+    } else if (systemInfo.kernelType === "linux") {
+        installer.setValue("RunProgram", "@TargetDir@/bin/run_crosseyeleo.sh");
+    } else if (systemInfo.productType === "osx") {
+        installer.setValue("RunProgram",
+            "@TargetDir@/CrossEyeLeoApp.app/Contents/MacOS/CrossEyeLeoApp");
+    }
+    installer.setValue("RunProgramDescription", "Launch CrossEyeLeoApp now");
 }
+
+// ------------------------------------------------------------------
+// Target directory page – silently accept "directory already exists"
+// so that reinstalling over a previous installation works without
+// asking the user to pick a different path.
+// ------------------------------------------------------------------
+Controller.prototype.TargetDirectoryPageCallback = function() {
+    // Re-affirm the automatic answer in case the message box fires after
+    // the constructor (some IFW versions raise it during page validation).
+    installer.setMessageBoxAutomaticAnswer("OverwriteTargetDirectory", QMessageBox.Yes);
+    installer.setMessageBoxAutomaticAnswer("installWarningOverwrite",   QMessageBox.Yes);
+};
 
 // ------------------------------------------------------------------
 // Introduction page – show description + contact info
@@ -38,6 +66,14 @@ Controller.prototype.IntroductionPageCallback = function() {
 Controller.prototype.FinishedPageCallback = function() {
     var widget = gui.currentPageWidget();
     if (!widget) return;
+
+    // Ensure the "launch after installation" checkbox is visible and ticked.
+    // The label text comes from RunProgramDescription set in the constructor.
+    var runItCheckBox = widget.RunItCheckBox;
+    if (runItCheckBox) {
+        runItCheckBox.visible = true;
+        runItCheckBox.checked = true;
+    }
 
     var label = widget.MessageLabel;
     if (!label) return;
