@@ -125,10 +125,13 @@ function purgePreviousInstallation(targetDir) {
         if (systemInfo.productType === "windows") {
             // targetDir is validated above to start with a drive letter (e.g. C:\).
             // Additionally reject any cmd.exe metacharacters (&, |, ^, !, %, <, >)
-            // that could cause command injection when the path is embedded in a
-            // "cmd /C rd ..." string.  Windows paths cannot legally contain most of
-            // these, but % and ^ are technically allowed; guard against them here.
-            if (/[&|^!%<>"]/.test(targetDir)) {
+            // and double quotes that could cause command injection when the path is
+            // embedded in a "cmd /C rd ..." string.  The double-quote check also
+            // prevents a closing-quote injection attack (e.g. a path ending with `"`
+            // that would terminate our quote and inject further commands).
+            // Windows paths cannot legally contain most of these characters, but %,
+            // ^, and " are technically allowed; guard against all of them here.
+            if (/[&|^!%<>\"]/.test(targetDir)) {
                 console.log("Directory removal skipped: path contains characters " +
                             "unsafe for shell embedding: " + targetDir);
             } else {
