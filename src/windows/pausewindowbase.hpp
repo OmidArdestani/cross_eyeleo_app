@@ -21,9 +21,24 @@ public:
     }
 
 protected:
-    virtual void showOnAllScreens()
+    virtual void showOnPrimaryScreen()
     {
-        setGeometry(QApplication::screens().constFirst()->geometry());
+        QScreen *screen = QApplication::primaryScreen();
+        if (!screen) {
+            return;
+        }
+
+        const QRect screenGeometry = screen->availableGeometry();
+        QSize targetSize = size();
+        if (!targetSize.isValid() || targetSize.isEmpty()) {
+            targetSize = sizeHint();
+        }
+
+        targetSize = targetSize.boundedTo(screenGeometry.size());
+
+        QRect centeredGeometry(QPoint(0, 0), targetSize);
+        centeredGeometry.moveCenter(screenGeometry.center());
+        setGeometry(centeredGeometry);
     }
 
     virtual void setupOpacityAnim(const int& duration)
