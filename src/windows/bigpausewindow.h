@@ -6,10 +6,9 @@
 #include <QLabel>
 #include <QProgressBar>
 #include <QPushButton>
+#include "pausewindowbase.hpp"
 
-class SettingsManager;
-
-class BigPauseWindow : public QWidget
+class BigPauseWindow : public PauseWindowBase
 {
     Q_OBJECT
 
@@ -20,29 +19,18 @@ public:
     void showWithAnimation();
     void hideWithAnimation();
 
-signals:
-    void skipClicked();
-    void breakCompleted();
-
 private slots:
-    void onTick();
-    void onHideFinished();
+    void onTick() override;
+    void onHideFinished() override;
 
 private:
     void setupUi();
-    void showOnAllScreens();
-
-    SettingsManager    *m_settings{nullptr};
 
     QLabel             *m_titleLabel{nullptr};
     QLabel             *m_timerLabel{nullptr};
     QProgressBar       *m_progressBar{nullptr};
     QLabel             *m_instructionLabel{nullptr};
     QPushButton        *m_skipButton{nullptr};
-
-    QPropertyAnimation *m_showAnim{nullptr};
-    QPropertyAnimation *m_hideAnim{nullptr};
-    QTimer             *m_countdown{nullptr};
 
     int m_totalSeconds{0};
     int m_remaining{0};

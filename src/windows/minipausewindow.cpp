@@ -10,28 +10,11 @@
 #include <QPainter>
 
 MiniPauseWindow::MiniPauseWindow(SettingsManager *settings, QWidget *parent)
-    : QWidget(parent)
-    , m_settings(settings)
+    : PauseWindowBase(settings, parent)
 {
-    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
-    setAttribute(Qt::WA_TranslucentBackground);
+    init();
 
     setupUi();
-
-    m_showAnim = new QPropertyAnimation(this, "windowOpacity", this);
-    m_showAnim->setDuration(500);
-    m_showAnim->setStartValue(0.0);
-    m_showAnim->setEndValue(1.0);
-
-    m_hideAnim = new QPropertyAnimation(this, "windowOpacity", this);
-    m_hideAnim->setDuration(500);
-    m_hideAnim->setStartValue(1.0);
-    m_hideAnim->setEndValue(0.0);
-    connect(m_hideAnim, &QPropertyAnimation::finished, this, &MiniPauseWindow::onHideFinished);
-
-    m_countdown = new QTimer(this);
-    m_countdown->setInterval(1000);
-    connect(m_countdown, &QTimer::timeout, this, &MiniPauseWindow::onTick);
 }
 
 void MiniPauseWindow::setupUi()
@@ -86,16 +69,6 @@ void MiniPauseWindow::setupUi()
     outerLayout->addWidget(card);
 }
 
-void MiniPauseWindow::showOnAllScreens()
-{
-    QRect totalGeometry;
-    const auto screens = QApplication::screens();
-    for (QScreen *screen : screens) {
-        totalGeometry = totalGeometry.united(screen->geometry());
-    }
-    setGeometry(totalGeometry);
-}
-
 void MiniPauseWindow::updateImage(const QString &imagePath)
 {
     QSvgRenderer renderer(imagePath);
@@ -123,7 +96,7 @@ void MiniPauseWindow::setExercise(ExerciseType type, int durationSeconds)
 
 void MiniPauseWindow::showWithAnimation()
 {
-    showOnAllScreens();
+    showOnPrimaryScreen();
     setWindowOpacity(0.0);
     QWidget::show();
     m_showAnim->start();

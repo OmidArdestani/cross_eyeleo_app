@@ -10,9 +10,11 @@
 
 #include "exercises/exercisemanager.h"
 
+#include "pausewindowbase.hpp"
+
 class SettingsManager;
 
-class MiniPauseWindow : public QWidget
+class MiniPauseWindow : public PauseWindowBase
 {
     Q_OBJECT
 
@@ -31,24 +33,17 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
 
 private slots:
-    void onTick();
-    void onHideFinished();
+    void onTick() override;
+    void onHideFinished() override;
 
 private:
     void setupUi();
-    void showOnAllScreens();
     void updateImage(const QString &imagePath);
-
-    SettingsManager    *m_settings{nullptr};
 
     QLabel             *m_exerciseNameLabel{nullptr};
     QLabel             *m_instructionLabel{nullptr};
     QLabel             *m_imageLabel{nullptr};
     QLabel             *m_timerLabel{nullptr};
-
-    QPropertyAnimation *m_showAnim{nullptr};
-    QPropertyAnimation *m_hideAnim{nullptr};
-    QTimer             *m_countdown{nullptr};
 
     int m_totalSeconds{0};
     int m_remaining{0};

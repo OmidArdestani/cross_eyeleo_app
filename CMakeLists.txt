@@ -22,6 +22,7 @@ if(CROSSEYELEO_BUILD_APP)
         src/activitymonitor.cpp
         src/trayicon.cpp
         src/windows/settingswindow.cpp
+        src/windows/pausewindowbase.hpp
         src/windows/bigpausewindow.cpp
         src/windows/minipausewindow.cpp
         src/windows/notificationwindow.cpp
