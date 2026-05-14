@@ -75,7 +75,9 @@ protected:
     virtual void init()
     {
         setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
-        setAttribute(Qt::WA_TranslucentBackground);
+        // Do NOT set WA_TranslucentBackground: the overlay must be fully
+        // opaque so the desktop is completely hidden and inaccessible.
+        setWindowModality(Qt::ApplicationModal);
 
         setupOpacityAnim(1000);
 

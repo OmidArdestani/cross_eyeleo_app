@@ -17,8 +17,8 @@ MiniPauseWindow::MiniPauseWindow(SettingsManager *settings, QWidget *parent)
 
 void MiniPauseWindow::setupUi()
 {
-    // Full-screen dark-transparent overlay (same pattern as BigPauseWindow)
-    setStyleSheet("background-color: rgba(0,0,0,170);");
+    // Full-screen solid dark overlay — desktop must not be visible or accessible.
+    setStyleSheet("background-color: rgb(13, 13, 20);");
 
     QVBoxLayout *outerLayout = new QVBoxLayout(this);
     outerLayout->setAlignment(Qt::AlignCenter);
@@ -28,7 +28,7 @@ void MiniPauseWindow::setupUi()
     QFrame *card = new QFrame(this);
     card->setFixedSize(480, 340);
     card->setStyleSheet(
-        "QFrame { background-color: rgba(30,30,45,230); border-radius: 16px; }");
+        "QFrame { background-color: rgb(30, 30, 45); border-radius: 16px; }");
 
     QVBoxLayout *layout = new QVBoxLayout(card);
     layout->setContentsMargins(24, 24, 24, 24);
@@ -48,7 +48,7 @@ void MiniPauseWindow::setupUi()
     m_instructionLabel = new QLabel(card);
     m_instructionLabel->setAlignment(Qt::AlignCenter);
     m_instructionLabel->setWordWrap(true);
-    m_instructionLabel->setStyleSheet("color: rgba(255,255,255,200); font-size: 13px;");
+    m_instructionLabel->setStyleSheet("color: rgb(200,200,215); font-size: 13px;");
 
     m_timerLabel = new QLabel("0:20", card);
     m_timerLabel->setAlignment(Qt::AlignCenter);
