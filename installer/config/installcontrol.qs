@@ -40,7 +40,10 @@ function Controller() {
 // of the maintenance tool binary that IFW places there on first install.
 // ------------------------------------------------------------------
 function previousInstallationExists(targetDir) {
-    if (!targetDir) return false;
+    if (!targetDir) {
+        console.log("[CEL] previousInstallationExists: targetDir is empty/null");
+        return false;
+    }
     var mtPath;
     if (systemInfo.productType === "windows") {
         mtPath = targetDir + "\\CrossEyeLeoAppMaintenanceTool.exe";
@@ -50,7 +53,10 @@ function previousInstallationExists(targetDir) {
     } else {
         mtPath = targetDir + "/CrossEyeLeoAppMaintenanceTool";
     }
-    return installer.fileExists(mtPath);
+    var exists = installer.fileExists(mtPath);
+    console.log("[CEL] previousInstallationExists: checking " + mtPath +
+                " -> " + (exists ? "FOUND" : "not found"));
+    return exists;
 }
 
 // ------------------------------------------------------------------
@@ -58,17 +64,27 @@ function previousInstallationExists(targetDir) {
 // Returns silently whether or not the app was running.
 // ------------------------------------------------------------------
 function stopRunningApp() {
+    console.log("[CEL] stopRunningApp: platform=" + systemInfo.productType);
     try {
+        var result;
         if (systemInfo.productType === "windows") {
-            installer.execute("taskkill", ["/F", "/IM", "CrossEyeLeoApp.exe"]);
+            console.log("[CEL] stopRunningApp: running taskkill /F /IM CrossEyeLeoApp.exe");
+            result = installer.execute("taskkill", ["/F", "/IM", "CrossEyeLeoApp.exe"]);
+            console.log("[CEL] stopRunningApp: taskkill exit code=" +
+                        (result ? result[0] : "n/a"));
         } else {
             // pkill is available on both Linux and macOS.
             // Exit code 1 (no matching process) is normal and silently ignored.
-            installer.execute("pkill", ["-x", "CrossEyeLeoApp"]);
+            console.log("[CEL] stopRunningApp: running pkill -x CrossEyeLeoApp");
+            result = installer.execute("pkill", ["-x", "CrossEyeLeoApp"]);
+            console.log("[CEL] stopRunningApp: pkill exit code=" +
+                        (result ? result[0] : "n/a"));
         }
     } catch (e) {
-        console.log("stopRunningApp failed (" + systemInfo.productType + "): " + e);
+        // A non-zero exit code (app not running) throws on some IFW builds.
+        console.log("[CEL] stopRunningApp: exception (app was likely not running): " + e);
     }
+    console.log("[CEL] stopRunningApp: done");
 }
 
 // ------------------------------------------------------------------
@@ -91,11 +107,25 @@ function stopRunningApp() {
 // maintenance tool, no existing directory) silently no-ops.
 // ------------------------------------------------------------------
 function purgePreviousInstallation(targetDir) {
-    if (!targetDir) return;
+    console.log("[CEL] purgePreviousInstallation: start, targetDir=" + targetDir +
+                ", platform=" + systemInfo.productType);
+
+    if (!targetDir) {
+        console.log("[CEL] purgePreviousInstallation: targetDir is empty, aborting");
+        return;
+    }
     if (systemInfo.productType === "windows") {
-        if (!/^[A-Za-z]:\\/.test(targetDir)) return;
+        if (!/^[A-Za-z]:\\/.test(targetDir)) {
+            console.log("[CEL] purgePreviousInstallation: path does not start with " +
+                        "a drive letter, aborting: " + targetDir);
+            return;
+        }
     } else {
-        if (targetDir.charAt(0) !== "/") return;
+        if (targetDir.charAt(0) !== "/") {
+            console.log("[CEL] purgePreviousInstallation: path does not start with " +
+                        "/, aborting: " + targetDir);
+            return;
+        }
     }
 
     // Step 1: run the maintenance tool to remove registry/shortcut metadata.
@@ -109,18 +139,29 @@ function purgePreviousInstallation(targetDir) {
         mtPath = targetDir + "/CrossEyeLeoAppMaintenanceTool";
     }
 
+    console.log("[CEL] purgePreviousInstallation: Step 1 - checking for maintenance tool at " +
+                mtPath);
     if (installer.fileExists(mtPath)) {
+        console.log("[CEL] purgePreviousInstallation: maintenance tool found, " +
+                    "running --unattended purge");
         try {
             // --unattended suppresses all dialogs; purge removes all components.
-            installer.execute(mtPath, ["--unattended", "purge"]);
+            var purgeResult = installer.execute(mtPath, ["--unattended", "purge"]);
+            console.log("[CEL] purgePreviousInstallation: purge exit code=" +
+                        (purgeResult ? purgeResult[0] : "n/a"));
         } catch (e) {
-            console.log("Maintenance tool purge failed (continuing with directory removal): " + e);
+            console.log("[CEL] purgePreviousInstallation: purge threw exception " +
+                        "(continuing with directory removal): " + e);
         }
+    } else {
+        console.log("[CEL] purgePreviousInstallation: maintenance tool not found at " +
+                    mtPath + ", skipping Step 1");
     }
 
     // Step 2: forcefully remove the directory so the new installation starts
     // with a completely clean slate.  On Windows the maintenance tool cannot
     // delete itself while running, so this step is always required.
+    console.log("[CEL] purgePreviousInstallation: Step 2 - forceful directory removal");
     try {
         if (systemInfo.productType === "windows") {
             // targetDir is validated above to start with a drive letter (e.g. C:\).
@@ -132,19 +173,29 @@ function purgePreviousInstallation(targetDir) {
             // Windows paths cannot legally contain most of these characters, but %,
             // ^, and " are technically allowed; guard against all of them here.
             if (/[&|^!%<>\"]/.test(targetDir)) {
-                console.log("Directory removal skipped: path contains characters " +
-                            "unsafe for shell embedding: " + targetDir);
+                console.log("[CEL] purgePreviousInstallation: directory removal skipped - " +
+                            "path contains characters unsafe for shell embedding: " + targetDir);
             } else {
-                installer.execute("cmd.exe",
-                    ["/C", "rd /S /Q \"" + targetDir + "\""]);
+                var rdCmd = "rd /S /Q \"" + targetDir + "\"";
+                console.log("[CEL] purgePreviousInstallation: running cmd.exe /C " + rdCmd);
+                var rdResult = installer.execute("cmd.exe", ["/C", rdCmd]);
+                console.log("[CEL] purgePreviousInstallation: rd exit code=" +
+                            (rdResult ? rdResult[0] : "n/a"));
             }
         } else {
-            installer.execute("rm", ["-rf", targetDir]);
+            console.log("[CEL] purgePreviousInstallation: running rm -rf " + targetDir);
+            var rmResult = installer.execute("rm", ["-rf", targetDir]);
+            console.log("[CEL] purgePreviousInstallation: rm exit code=" +
+                        (rmResult ? rmResult[0] : "n/a"));
         }
     } catch (e) {
-        console.log("Directory removal failed (" + systemInfo.productType +
-                    ", targetDir=" + targetDir + "): " + e);
+        console.log("[CEL] purgePreviousInstallation: directory removal threw exception: " + e);
     }
+
+    // Verify the directory is actually gone.
+    var dirStillExists = installer.fileExists(targetDir);
+    console.log("[CEL] purgePreviousInstallation: done - directory still exists after removal: " +
+                dirStillExists);
 }
 
 // ------------------------------------------------------------------
@@ -170,7 +221,16 @@ Controller.prototype.TargetDirectoryPageCallback = function() {
     installer.setMessageBoxAutomaticAnswer("maintenanceToolDetected",   QMessageBox.Yes);
 
     var targetDir = installer.value("TargetDir");
-    if (!previousInstallationExists(targetDir)) return; // First-time install -- nothing to do.
+    console.log("[CEL] TargetDirectoryPageCallback: targetDir=" + targetDir);
+
+    if (!previousInstallationExists(targetDir)) {
+        console.log("[CEL] TargetDirectoryPageCallback: no existing installation found, " +
+                    "first-time install path");
+        return;
+    }
+
+    console.log("[CEL] TargetDirectoryPageCallback: existing installation detected, " +
+                "showing confirmation dialog");
 
     // An existing installation was found.  Ask the user whether to remove it.
     var result = QMessageBox.question(
@@ -184,12 +244,19 @@ Controller.prototype.TargetDirectoryPageCallback = function() {
         QMessageBox.Yes | QMessageBox.No
     );
 
+    console.log("[CEL] TargetDirectoryPageCallback: user answered " +
+                (result === QMessageBox.Yes ? "Yes" : "No"));
+
     if (result === QMessageBox.Yes) {
+        console.log("[CEL] TargetDirectoryPageCallback: stopping running app...");
         stopRunningApp();
+        console.log("[CEL] TargetDirectoryPageCallback: purging previous installation...");
         purgePreviousInstallation(targetDir);
-        // The directory is now clean; the wizard proceeds when the user clicks Next.
+        console.log("[CEL] TargetDirectoryPageCallback: purge complete, " +
+                    "user may now click Next");
     } else {
         // User declined.  Disable Next so they must choose a different path.
+        console.log("[CEL] TargetDirectoryPageCallback: user declined, disabling Next button");
         var nextBtn = gui.button(buttons.NextButton);
         if (nextBtn) nextBtn.enabled = false;
 
@@ -199,7 +266,10 @@ Controller.prototype.TargetDirectoryPageCallback = function() {
         if (widget && widget.TargetDirectoryLineEdit && !widget._reinstallListenerAttached) {
             widget._reinstallListenerAttached = true;
             widget.TargetDirectoryLineEdit.textChanged.connect(function(newPath) {
-                if (nextBtn) nextBtn.enabled = !previousInstallationExists(newPath);
+                var hasPrev = previousInstallationExists(newPath);
+                console.log("[CEL] TargetDirectoryLineEdit.textChanged: newPath=" + newPath +
+                            " hasPreviousInstall=" + hasPrev);
+                if (nextBtn) nextBtn.enabled = !hasPrev;
             });
         }
     }
