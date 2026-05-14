@@ -1,11 +1,11 @@
 
 #pragma once
 
+#include <QApplication>
+#include <QPropertyAnimation>
 #include <QScreen>
 #include <QTimer>
 #include <QWidget>
-#include <qapplication.h>
-#include <qpropertyanimation.h>
 
 
 class SettingsManager;
