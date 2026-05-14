@@ -38,6 +38,10 @@ if(CROSSEYELEO_BUILD_APP)
 
     target_include_directories(CrossEyeLeoApp PRIVATE src)
 
+    target_compile_definitions(CrossEyeLeoApp PRIVATE
+        APP_VERSION="${PROJECT_VERSION}"
+    )
+
     target_link_libraries(CrossEyeLeoApp PRIVATE
         Qt6::Core
         Qt6::Gui

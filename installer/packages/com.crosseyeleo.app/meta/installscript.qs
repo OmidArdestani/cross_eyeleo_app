@@ -43,6 +43,22 @@ Component.prototype.createOperations = function() {
             "/f"
         );
 
+        // ---- Windows: write installed version to registry (read by the app) ----
+        component.addOperation(
+            "Execute",
+            "reg", "add",
+            "HKCU\\Software\\CrossEyeLeoApp",
+            "/v", "Version",
+            "/t", "REG_SZ",
+            "/d", "@Version@",
+            "/f",
+            "UNDOEXECUTE",
+            "reg", "delete",
+            "HKCU\\Software\\CrossEyeLeoApp",
+            "/v", "Version",
+            "/f"
+        );
+
     } else if (systemInfo.kernelType === "linux") {
         // ---- Linux: .desktop entry in ~/.local/share/applications ----
         component.addOperation(
