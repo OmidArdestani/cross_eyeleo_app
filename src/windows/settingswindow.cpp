@@ -99,12 +99,12 @@ void SettingsWindow::setupShortBreakTab(QWidget *tab)
 
     QFormLayout *fl = new QFormLayout();
     m_miniPauseInterval = new QSpinBox(tab);
-    m_miniPauseInterval->setRange(3, 60);
+    m_miniPauseInterval->setRange(1, 60);
     m_miniPauseInterval->setSuffix(tr(" minutes"));
     fl->addRow(tr("Interval:"), m_miniPauseInterval);
 
     m_miniPauseDuration = new QSpinBox(tab);
-    m_miniPauseDuration->setRange(10, 60);
+    m_miniPauseDuration->setRange(5, 60);
     m_miniPauseDuration->setSuffix(tr(" seconds"));
     fl->addRow(tr("Duration:"), m_miniPauseDuration);
 
