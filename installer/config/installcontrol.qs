@@ -5,11 +5,21 @@
 // LinkedIn URL: update "omid-ardestani" below to match your actual profile slug.
 
 function Controller() {
-    // Automatically accept the "target directory already exists – overwrite?"
-    // message box so that reinstalling into the same directory works without
-    // requiring the user to manually choose a different path each time.
+    // Automatically accept "target directory already exists" and "existing
+    // installation detected" message boxes so that reinstalling over a previous
+    // installation works without requiring the user to manually dismiss dialogs
+    // or choose a different path.
+    //
+    // IFW raises different dialogs depending on the state of the target dir:
+    //   OverwriteTargetDirectory  – directory exists but no prior IFW metadata
+    //   installWarningOverwrite   – general overwrite warning (older IFW builds)
+    //   maintenanceToolDetected   – directory contains a maintenance tool/metadata
+    //                               from a previous IFW installation (the common
+    //                               case on reinstall; this was the missing handler
+    //                               that caused reinstalls to fail)
     installer.setMessageBoxAutomaticAnswer("OverwriteTargetDirectory", QMessageBox.Yes);
     installer.setMessageBoxAutomaticAnswer("installWarningOverwrite",   QMessageBox.Yes);
+    installer.setMessageBoxAutomaticAnswer("maintenanceToolDetected",   QMessageBox.Yes);
 
     // Set the program to launch after installation (shown as a checkbox on the
     // Finished page).  Must be set early so IFW knows to show RunItCheckBox.
@@ -26,14 +36,19 @@ function Controller() {
 
 // ------------------------------------------------------------------
 // Target directory page – silently accept "directory already exists"
-// so that reinstalling over a previous installation works without
-// asking the user to pick a different path.
+// and "maintenance tool detected" so that reinstalling over a previous
+// installation works without asking the user to pick a different path.
 // ------------------------------------------------------------------
 Controller.prototype.TargetDirectoryPageCallback = function() {
-    // Re-affirm the automatic answer in case the message box fires after
-    // the constructor (some IFW versions raise it during page validation).
+    // Re-affirm all automatic answers in case the message boxes fire after
+    // the constructor (some IFW versions raise them during page validation).
     installer.setMessageBoxAutomaticAnswer("OverwriteTargetDirectory", QMessageBox.Yes);
     installer.setMessageBoxAutomaticAnswer("installWarningOverwrite",   QMessageBox.Yes);
+    // maintenanceToolDetected is raised when the target directory already
+    // contains a maintenance tool / IFW metadata from a previous install.
+    // Without this answer the reinstall fails even though OverwriteTargetDirectory
+    // was already being handled.
+    installer.setMessageBoxAutomaticAnswer("maintenanceToolDetected",   QMessageBox.Yes);
 };
 
 // ------------------------------------------------------------------
