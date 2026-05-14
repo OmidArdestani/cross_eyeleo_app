@@ -55,7 +55,7 @@ protected:
         connect(m_hideAnim, &QPropertyAnimation::finished, this, &PauseWindowBase::onHideFinished);
     }
 
-protected slots:
+protected:
     virtual void onHideFinished(){}
     virtual void onTick(){}
     virtual void init()

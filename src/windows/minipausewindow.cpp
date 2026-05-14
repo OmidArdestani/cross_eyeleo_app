@@ -96,7 +96,7 @@ void MiniPauseWindow::setExercise(ExerciseType type, int durationSeconds)
 
 void MiniPauseWindow::showWithAnimation()
 {
-    showOnAllScreens();
+    showOnPrimaryScreen();
     setWindowOpacity(0.0);
     QWidget::show();
     m_showAnim->start();
