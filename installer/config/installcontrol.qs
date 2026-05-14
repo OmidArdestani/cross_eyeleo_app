@@ -108,16 +108,23 @@ function stopRunningApp() {
 //
 // Two-step strategy:
 //
-//   Step 1 – run the maintenance tool with "--unattended purge" so IFW
-//   can clean up registry entries, Start-Menu shortcuts, and component
-//   metadata without showing any UI.  "--unattended" is required because
-//   "purge" alone can still prompt on some IFW builds.
+//   Step 1 – on Linux/macOS only: run the maintenance tool with
+//   "--unattended purge" to clean registry entries, shortcuts, and
+//   component metadata.  On Windows this step is skipped because IFW
+//   holds a lock on cache.lock inside the target directory while the
+//   Target Directory page is active; that lock prevents the maintenance
+//   tool from running unattended (it blocks on "Do you want to
+//   continue?" with no terminal available).  IFW overwrites registry
+//   entries and shortcuts during the new installation, so skipping
+//   Step 1 on Windows is safe.
 //
-//   Step 2 – forcefully delete the directory with an OS command.  This
-//   is necessary because on Windows the maintenance tool executable
-//   cannot delete itself while it is running, so it always leaves the
-//   directory behind.  On all platforms this step also handles the case
-//   where Step 1 failed or was not available (IFW < 4.3).
+//   Step 2 – forcefully delete the directory with an OS command.  On
+//   Windows we use PowerShell Remove-Item with -ErrorAction
+//   SilentlyContinue instead of "rd /S /Q" because the latter aborts
+//   completely when it encounters any locked file (such as cache.lock,
+//   which IFW holds).  PowerShell skips locked files and deletes
+//   everything else; the remaining cache.lock is managed by IFW.
+//   On Linux/macOS rm -rf is sufficient.
 //
 // Both steps are wrapped in try/catch so a first-time install (no
 // maintenance tool, no existing directory) silently no-ops.
@@ -150,56 +157,74 @@ function purgePreviousInstallation(targetDir) {
         }
     }
 
-    // Step 1: run the maintenance tool to remove registry/shortcut metadata.
-    var mtPath;
-    if (systemInfo.productType === "windows") {
-        mtPath = dir + "/CrossEyeLeoAppMaintenanceTool.exe";
-    } else if (systemInfo.productType === "osx") {
-        mtPath = dir + "/CrossEyeLeoAppMaintenanceTool.app" +
-                       "/Contents/MacOS/CrossEyeLeoAppMaintenanceTool";
-    } else {
-        mtPath = dir + "/CrossEyeLeoAppMaintenanceTool";
-    }
-
-    console.log("[CEL] purgePreviousInstallation: Step 1 - checking for maintenance tool at " +
-                mtPath);
-    if (installer.fileExists(mtPath)) {
-        console.log("[CEL] purgePreviousInstallation: maintenance tool found, " +
-                    "running --unattended purge");
-        try {
-            // --unattended suppresses all dialogs; purge removes all components.
-            var purgeResult = installer.execute(mtPath, ["--unattended", "purge"]);
-            console.log("[CEL] purgePreviousInstallation: purge exit code=" +
-                        (purgeResult ? purgeResult[0] : "n/a"));
-        } catch (e) {
-            console.log("[CEL] purgePreviousInstallation: purge threw exception " +
-                        "(continuing with directory removal): " + e);
+    // Step 1: on Linux/macOS run the maintenance tool to remove registry/shortcut
+    // metadata.  On Windows this step is intentionally skipped because IFW holds
+    // a lock on cache.lock inside the target directory while the Target Directory
+    // page is active, which prevents the maintenance tool from running unattended
+    // (it blocks on "Do you want to continue?" with no terminal to answer it).
+    // IFW will create fresh registry entries and shortcuts during the new
+    // installation, so skipping this step on Windows is safe.
+    if (systemInfo.productType !== "windows") {
+        var mtPath;
+        if (systemInfo.productType === "osx") {
+            mtPath = dir + "/CrossEyeLeoAppMaintenanceTool.app" +
+                           "/Contents/MacOS/CrossEyeLeoAppMaintenanceTool";
+        } else {
+            mtPath = dir + "/CrossEyeLeoAppMaintenanceTool";
+        }
+        console.log("[CEL] purgePreviousInstallation: Step 1 - checking for maintenance tool at " +
+                    mtPath);
+        if (installer.fileExists(mtPath)) {
+            console.log("[CEL] purgePreviousInstallation: maintenance tool found, " +
+                        "running --unattended purge");
+            try {
+                var purgeResult = installer.execute(mtPath, ["--unattended", "purge"]);
+                console.log("[CEL] purgePreviousInstallation: purge exit code=" +
+                            (purgeResult ? purgeResult[0] : "n/a"));
+            } catch (e) {
+                console.log("[CEL] purgePreviousInstallation: purge threw exception " +
+                            "(continuing with directory removal): " + e);
+            }
+        } else {
+            console.log("[CEL] purgePreviousInstallation: maintenance tool not found at " +
+                        mtPath + ", skipping Step 1");
         }
     } else {
-        console.log("[CEL] purgePreviousInstallation: maintenance tool not found at " +
-                    mtPath + ", skipping Step 1");
+        console.log("[CEL] purgePreviousInstallation: Step 1 skipped on Windows " +
+                    "(IFW cache.lock conflict)");
     }
 
     // Step 2: forcefully remove the directory so the new installation starts
-    // with a completely clean slate.  On Windows the maintenance tool cannot
-    // delete itself while running, so this step is always required.
+    // with a completely clean slate.
+    //
+    // On Windows we use PowerShell's Remove-Item with -ErrorAction SilentlyContinue
+    // instead of cmd.exe "rd /S /Q" because:
+    //   - IFW holds a lock on cache.lock inside the target directory while the
+    //     installer is running.  "rd /S /Q" aborts completely when it hits any
+    //     locked file; PowerShell skips locked files and deletes everything else.
+    //   - The remaining cache.lock file (~50 bytes) is overwritten/managed by the
+    //     new IFW installer during its own installation phase.
     console.log("[CEL] purgePreviousInstallation: Step 2 - forceful directory removal");
     try {
         if (systemInfo.productType === "windows") {
-            // Additionally reject any cmd.exe metacharacters (&, |, ^, !, %, <, >)
-            // and double quotes that could cause command injection when the path is
-            // embedded in a "cmd /C rd ..." string.
-            if (/[&|^!%<>\"]/.test(dir)) {
+            // Reject characters that would break out of the PowerShell single-quoted
+            // string: single quotes, and cmd metacharacters that are also illegal in
+            // Windows paths (belt-and-suspenders).
+            if (/[&|^!%<>\"']/.test(dir)) {
                 console.log("[CEL] purgePreviousInstallation: directory removal skipped - " +
                             "path contains characters unsafe for shell embedding: " + dir);
             } else {
-                // Convert to backslashes for cmd.exe reliability.
-                var cmdDir = dir.replace(/\//g, "\\");
-                var rdCmd = "rd /S /Q \"" + cmdDir + "\"";
-                console.log("[CEL] purgePreviousInstallation: running cmd.exe /C " + rdCmd);
-                var rdResult = installer.execute("cmd.exe", ["/C", rdCmd]);
-                console.log("[CEL] purgePreviousInstallation: rd exit code=" +
-                            (rdResult ? rdResult[0] : "n/a"));
+                // Use -LiteralPath so bracket characters in the path name are
+                // not treated as wildcard patterns.
+                // Single-quoted path prevents variable/expression expansion;
+                // single quotes in the path are already rejected above.
+                var psCmd = "Remove-Item -LiteralPath '" + dir +
+                            "' -Recurse -Force -ErrorAction SilentlyContinue";
+                console.log("[CEL] purgePreviousInstallation: running powershell.exe " + psCmd);
+                var psResult = installer.execute("powershell.exe",
+                    ["-NonInteractive", "-NoProfile", "-Command", psCmd]);
+                console.log("[CEL] purgePreviousInstallation: PowerShell exit code=" +
+                            (psResult ? psResult[0] : "n/a"));
             }
         } else {
             console.log("[CEL] purgePreviousInstallation: running rm -rf " + dir);
