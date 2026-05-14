@@ -183,12 +183,27 @@ void SettingsWindow::setupInfoTab(QWidget *tab)
 
     vl->addWidget(statsGroup);
 
-    QLabel *linkLabel = new QLabel(
-        tr("<a href=\"https://github.com/OmidArdestani/cross_eyeleo_app\">"
-           "View on GitHub</a>"), tab);
-    linkLabel->setOpenExternalLinks(true);
-    linkLabel->setAlignment(Qt::AlignCenter);
-    vl->addWidget(linkLabel);
+    QGroupBox *aboutGroup = new QGroupBox(tr("About the Developer"), tab);
+    QFormLayout *afl = new QFormLayout(aboutGroup);
+
+    QLabel *emailLabel = new QLabel(
+        "<a href=\"mailto:omid.91wo@gmail.com\">omid.91wo@gmail.com</a>", aboutGroup);
+    emailLabel->setOpenExternalLinks(true);
+
+    QLabel *linkedInLabel = new QLabel(
+        "<a href=\"https://www.linkedin.com/in/omidardestani/\">linkedin.com/in/omidardestani</a>",
+        aboutGroup);
+    linkedInLabel->setOpenExternalLinks(true);
+
+    QLabel *githubLabel = new QLabel(
+        "<a href=\"https://github.com/OmidArdestani\">github.com/OmidArdestani</a>", aboutGroup);
+    githubLabel->setOpenExternalLinks(true);
+
+    afl->addRow(tr("Email:"),    emailLabel);
+    afl->addRow(tr("LinkedIn:"), linkedInLabel);
+    afl->addRow(tr("GitHub:"),   githubLabel);
+
+    vl->addWidget(aboutGroup);
 
     vl->addStretch();
 }

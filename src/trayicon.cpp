@@ -25,6 +25,9 @@ void TrayIcon::buildMenu()
     QAction *settingsAction = m_menu->addAction(tr("Settings"));
     connect(settingsAction, &QAction::triggered, this, &TrayIcon::settingsRequested);
 
+    QAction *aboutAction = m_menu->addAction(tr("About"));
+    connect(aboutAction, &QAction::triggered, this, &TrayIcon::aboutRequested);
+
     QMenu *pauseMenu = m_menu->addMenu(tr("Pause"));
     const QList<QPair<QString,int>> pauseOptions = {
         { tr("5 minutes"),    5  },
