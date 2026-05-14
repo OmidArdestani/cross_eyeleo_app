@@ -55,9 +55,11 @@ protected:
         connect(m_hideAnim, &QPropertyAnimation::finished, this, &PauseWindowBase::onHideFinished);
     }
 
-protected:
+protected slots:
     virtual void onHideFinished(){}
     virtual void onTick(){}
+
+protected:
     virtual void init()
     {
         setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
