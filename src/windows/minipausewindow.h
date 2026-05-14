@@ -6,9 +6,9 @@
 #include <QTimer>
 #include <QLabel>
 #include <QPushButton>
-#include <QtSvg/QSvgRenderer>
 
 #include "exercises/exercisemanager.h"
+#include "exerciseanimationwidget.h"
 
 #include "pausewindowbase.hpp"
 
@@ -22,7 +22,7 @@ public:
     explicit MiniPauseWindow(SettingsManager *settings, QWidget *parent = nullptr);
 
     void setExercise(ExerciseType type, int durationSeconds);
-    void showWithAnimation();
+    void showWithAnimation(QScreen *screen = nullptr);
     void hideWithAnimation();
 
 signals:
@@ -38,12 +38,11 @@ private slots:
 
 private:
     void setupUi();
-    void updateImage(const QString &imagePath);
 
-    QLabel             *m_exerciseNameLabel{nullptr};
-    QLabel             *m_instructionLabel{nullptr};
-    QLabel             *m_imageLabel{nullptr};
-    QLabel             *m_timerLabel{nullptr};
+    QLabel                  *m_exerciseNameLabel{nullptr};
+    QLabel                  *m_instructionLabel{nullptr};
+    ExerciseAnimationWidget *m_animWidget{nullptr};
+    QLabel                  *m_timerLabel{nullptr};
 
     int m_totalSeconds{0};
     int m_remaining{0};

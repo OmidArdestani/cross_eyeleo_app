@@ -41,6 +41,18 @@ protected:
         setGeometry(centeredGeometry);
     }
 
+    // Covers the virtual desktop formed by all connected screens.
+    // Used in strict mode to block access to every monitor.
+    virtual void showOnScreen(QScreen *screen)
+    {
+        if (!screen) {
+            showOnPrimaryScreen();
+            return;
+        }
+        // Use the full geometry (including taskbar/dock) so nothing peeks through.
+        setGeometry(screen->geometry());
+    }
+
     virtual void setupOpacityAnim(const int& duration)
     {
         m_showAnim = new QPropertyAnimation(this, "windowOpacity", this);
@@ -63,7 +75,9 @@ protected:
     virtual void init()
     {
         setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
-        setAttribute(Qt::WA_TranslucentBackground);
+        // Do NOT set WA_TranslucentBackground: the overlay must be fully
+        // opaque so the desktop is completely hidden and inaccessible.
+        setWindowModality(Qt::ApplicationModal);
 
         setupOpacityAnim(1000);
 

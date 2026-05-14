@@ -13,6 +13,7 @@
 #include "exercises/exercisemanager.h"
 
 #include <QApplication>
+#include <QScreen>
 #include <QLocalSocket>
 #include <QMessageBox>
 
@@ -244,7 +245,7 @@ void App::onBeforePausePostpone()
 
 void App::onBigPauseSkipped()
 {
-    if (m_bigPauseWindow) m_bigPauseWindow->hideWithAnimation();
+    for (auto *w : m_bigPauseWindows) w->hideWithAnimation();
     m_settings->incrementSkipCount();
     m_settings->save();
     m_scheduler->resetBigPauseTimer();
@@ -253,7 +254,7 @@ void App::onBigPauseSkipped()
 
 void App::onBigPauseCompleted()
 {
-    if (m_bigPauseWindow) m_bigPauseWindow->hideWithAnimation();
+    for (auto *w : m_bigPauseWindows) w->hideWithAnimation();
     m_settings->incrementLongBreakCount();
     m_settings->save();
     m_scheduler->resetBigPauseTimer();
@@ -262,12 +263,12 @@ void App::onBigPauseCompleted()
 
 void App::onMiniPauseDismissed()
 {
-    if (m_miniPauseWindow) m_miniPauseWindow->hideWithAnimation();
+    for (auto *w : m_miniPauseWindows) w->hideWithAnimation();
 }
 
 void App::onMiniPauseCompleted()
 {
-    if (m_miniPauseWindow) m_miniPauseWindow->hideWithAnimation();
+    for (auto *w : m_miniPauseWindows) w->hideWithAnimation();
     m_settings->incrementShortBreakCount();
     m_settings->save();
 }
@@ -288,30 +289,72 @@ void App::onSettingsChanged()
 
 void App::showBigPause()
 {
-    if (!m_bigPauseWindow) {
-        m_bigPauseWindow = new BigPauseWindow(m_settings);
-        connect(m_bigPauseWindow, &BigPauseWindow::skipClicked,
-                this, &App::onBigPauseSkipped);
-        connect(m_bigPauseWindow, &BigPauseWindow::breakCompleted,
-                this, &App::onBigPauseCompleted);
-    }
+    // Clean up any existing windows from a previous break.
+    for (auto *w : m_bigPauseWindows) w->deleteLater();
+    m_bigPauseWindows.clear();
+
     m_stateMachine->transitionTo(AppState::RELAXING);
-    m_bigPauseWindow->startCountdown(m_settings->bigPauseDuration() * 60);
-    m_bigPauseWindow->showWithAnimation();
+
+    // In strict mode show one window on every connected screen; otherwise
+    // show a single centered window on the primary screen.
+    const bool strict = m_settings->strictMode();
+    const QList<QScreen*> screens = strict
+        ? QApplication::screens()
+        : QList<QScreen*>{QApplication::primaryScreen()};
+
+    const int duration = m_settings->bigPauseDuration() * 60;
+
+    for (int i = 0; i < screens.size(); ++i) {
+        auto *w = new BigPauseWindow(m_settings);
+        m_bigPauseWindows.append(w);
+
+        if (i == 0) {
+            // Primary window drives the App-level state transitions.
+            connect(w, &BigPauseWindow::skipClicked,
+                    this, &App::onBigPauseSkipped);
+            connect(w, &BigPauseWindow::breakCompleted,
+                    this, &App::onBigPauseCompleted);
+        } else {
+            // Secondary windows self-hide on completion; skip is hidden in strict mode.
+            connect(w, &BigPauseWindow::breakCompleted,
+                    w, &BigPauseWindow::hideWithAnimation);
+        }
+
+        w->startCountdown(duration);
+        w->showWithAnimation(strict ? screens[i] : nullptr);
+    }
 }
 
 void App::showMiniPause()
 {
-    if (!m_miniPauseWindow) {
-        m_miniPauseWindow = new MiniPauseWindow(m_settings);
-        connect(m_miniPauseWindow, &MiniPauseWindow::dismissed,
-                this, &App::onMiniPauseDismissed);
-        connect(m_miniPauseWindow, &MiniPauseWindow::completed,
-                this, &App::onMiniPauseCompleted);
-    }
+    // Clean up any existing windows from a previous break.
+    for (auto *w : m_miniPauseWindows) w->deleteLater();
+    m_miniPauseWindows.clear();
+
+    const bool strict = m_settings->strictMode();
+    const QList<QScreen*> screens = strict
+        ? QApplication::screens()
+        : QList<QScreen*>{QApplication::primaryScreen()};
+
     Exercise ex = ExerciseManager::randomExercise();
-    m_miniPauseWindow->setExercise(ex.type, m_settings->miniPauseDuration());
-    m_miniPauseWindow->showWithAnimation();
+
+    for (int i = 0; i < screens.size(); ++i) {
+        auto *w = new MiniPauseWindow(m_settings);
+        m_miniPauseWindows.append(w);
+
+        if (i == 0) {
+            connect(w, &MiniPauseWindow::dismissed,
+                    this, &App::onMiniPauseDismissed);
+            connect(w, &MiniPauseWindow::completed,
+                    this, &App::onMiniPauseCompleted);
+        } else {
+            connect(w, &MiniPauseWindow::completed,
+                    w, &MiniPauseWindow::hideWithAnimation);
+        }
+
+        w->setExercise(ex.type, m_settings->miniPauseDuration());
+        w->showWithAnimation(strict ? screens[i] : nullptr);
+    }
 }
 
 void App::pauseMonitoring(int minutes)

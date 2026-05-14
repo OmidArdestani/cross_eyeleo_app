@@ -16,7 +16,7 @@ public:
     explicit BigPauseWindow(SettingsManager *settings, QWidget *parent = nullptr);
 
     void startCountdown(int durationSeconds);
-    void showWithAnimation();
+    void showWithAnimation(QScreen *screen = nullptr);
     void hideWithAnimation();
 
 private slots:

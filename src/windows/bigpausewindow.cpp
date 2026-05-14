@@ -43,7 +43,7 @@ void BigPauseWindow::setupUi()
     m_progressBar->setTextVisible(false);
     m_progressBar->setFixedHeight(8);
     m_progressBar->setStyleSheet(
-        "QProgressBar { background: rgba(255,255,255,60); border-radius: 4px; }"
+        "QProgressBar { background: rgb(50,50,65); border-radius: 4px; }"
         "QProgressBar::chunk { background: #4fc3f7; border-radius: 4px; }");
 
     m_instructionLabel = new QLabel(tr("Relax your eyes and take a break from the screen."), this);
@@ -51,13 +51,13 @@ void BigPauseWindow::setupUi()
     QFont instrFont = m_instructionLabel->font();
     instrFont.setPointSize(14);
     m_instructionLabel->setFont(instrFont);
-    m_instructionLabel->setStyleSheet("color: rgba(255,255,255,200);");
+    m_instructionLabel->setStyleSheet("color: rgb(200,200,215);");
 
     m_skipButton = new QPushButton(tr("Skip Break"), this);
     m_skipButton->setStyleSheet(
-        "QPushButton { background: rgba(255,255,255,40); color: white; border: 1px solid rgba(255,255,255,100);"
+        "QPushButton { background: rgb(60,60,80); color: white; border: 1px solid rgb(120,120,150);"
         " border-radius: 8px; padding: 10px 30px; font-size: 14px; }"
-        "QPushButton:hover { background: rgba(255,255,255,70); }");
+        "QPushButton:hover { background: rgb(80,80,105); }");
     connect(m_skipButton, &QPushButton::clicked, this, &BigPauseWindow::skipClicked);
 
     layout->addStretch();
@@ -69,7 +69,7 @@ void BigPauseWindow::setupUi()
     layout->addWidget(m_skipButton, 0, Qt::AlignCenter);
     layout->addStretch();
 
-    setStyleSheet("background-color: rgba(0,0,0,180);");
+    setStyleSheet("background-color: rgb(13, 13, 20);");
 }
 
 void BigPauseWindow::startCountdown(int durationSeconds)
@@ -79,10 +79,13 @@ void BigPauseWindow::startCountdown(int durationSeconds)
     onTick();
 }
 
-void BigPauseWindow::showWithAnimation()
+void BigPauseWindow::showWithAnimation(QScreen *screen)
 {
     m_skipButton->setVisible(!m_settings->strictMode());
-    showOnPrimaryScreen();
+    if (screen)
+        showOnScreen(screen);
+    else
+        showOnPrimaryScreen();
     setWindowOpacity(0.0);
     QWidget::show();
     m_showAnim->start();
