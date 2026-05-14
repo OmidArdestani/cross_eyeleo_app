@@ -90,6 +90,20 @@ Component.prototype.createOperations = function() {
             "X-GNOME-Autostart-enabled=true"
         );
 
+        // ---- Linux: write installed version to config file (read by the app) ----
+        // QSettings(NativeFormat, UserScope, "CrossEyeLeoApp") maps to
+        // ~/.config/CrossEyeLeoApp.conf on Linux (distinct from the app's own
+        // settings at ~/.config/CrossEyeLeo/CrossEyeLeoApp.conf).
+        component.addOperation(
+            "Execute",
+            "/bin/sh", "-c",
+            "mkdir -p \"@HomeDir@/.config\" && " +
+            "printf '%s\\n' '[General]' 'Version=@Version@' > \"@HomeDir@/.config/CrossEyeLeoApp.conf\"",
+            "UNDOEXECUTE",
+            "/bin/sh", "-c",
+            "rm -f \"@HomeDir@/.config/CrossEyeLeoApp.conf\""
+        );
+
     } else if (systemInfo.productType === "osx") {
         // ---- macOS: LaunchAgent plist for login startup ----
         // PlistBuddy (available on all macOS since 10.5) creates the plist.
@@ -115,6 +129,18 @@ Component.prototype.createOperations = function() {
             "UNDOEXECUTE",
             "/bin/sh", "-c",
             "rm -f \"@HomeDir@/Library/LaunchAgents/com.crosseyeleo.app.plist\""
+        );
+
+        // ---- macOS: write installed version to user defaults (read by the app) ----
+        // QSettings(NativeFormat, UserScope, "CrossEyeLeoApp") maps to
+        // ~/Library/Preferences/CrossEyeLeoApp.plist on macOS.
+        component.addOperation(
+            "Execute",
+            "/bin/sh", "-c",
+            "defaults write CrossEyeLeoApp Version \"@Version@\"",
+            "UNDOEXECUTE",
+            "/bin/sh", "-c",
+            "defaults delete CrossEyeLeoApp Version 2>/dev/null || true"
         );
     }
 };

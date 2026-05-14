@@ -2,30 +2,25 @@
 
 #include <QString>
 #include <QCoreApplication>
-
-#ifdef Q_OS_WIN
 #include <QSettings>
-#endif
 
 #ifndef APP_VERSION
 #define APP_VERSION "unknown"
 #endif
 
 // Returns the installed application version.
-// On Windows, reads from the registry key written by the installer
-// (HKEY_CURRENT_USER\Software\CrossEyeLeoApp, value "Version").
-// Falls back to QCoreApplication::applicationVersion() when the key
-// is absent or on non-Windows platforms.
+// Reads from the platform-appropriate location written by the installer:
+//   - Windows: HKEY_CURRENT_USER\Software\CrossEyeLeoApp (registry)
+//   - macOS:   ~/Library/Preferences/CrossEyeLeoApp.plist
+//   - Linux:   ~/.config/CrossEyeLeoApp.conf
+// Falls back to QCoreApplication::applicationVersion() when the
+// installer-written entry is absent (e.g. dev builds).
 namespace AppVersion {
     inline QString get()
     {
-#ifdef Q_OS_WIN
-        QSettings reg("HKEY_CURRENT_USER\\Software\\CrossEyeLeoApp",
-                       QSettings::NativeFormat);
-        const QString regVersion = reg.value("Version").toString();
-        if (!regVersion.isEmpty())
-            return regVersion;
-#endif
-        return QCoreApplication::applicationVersion();
+        QSettings settings(QSettings::NativeFormat, QSettings::UserScope,
+                           "CrossEyeLeoApp");
+        const QString v = settings.value("Version").toString();
+        return v.isEmpty() ? QCoreApplication::applicationVersion() : v;
     }
 } // namespace AppVersion
