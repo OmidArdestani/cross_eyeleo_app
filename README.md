@@ -1,4 +1,4 @@
-# Cross-platform EyeLeo App (Inspired by [EyeLeo](https://eyeleo.com/))
+# Cross-platform EyeLeo App (Inspired by [EyeLeo](https://blucbo.github.io/dist/index.html))
 
 A cross-platform eye-care reminder application built with Qt 6 and C++17. The app runs silently in the system tray and periodically prompts users to take structured short and long breaks, including guided eye exercises. Its goal is to reduce digital eye strain and support healthier screen habits during extended computer use.
 
