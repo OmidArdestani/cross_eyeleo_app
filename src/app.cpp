@@ -106,6 +106,10 @@ void App::onBigPauseDue()
 {
     if (m_suspended) return;
 
+    // Dismiss any active mini pause — a long break takes precedence.
+    for (auto *w : m_miniPauseWindows) w->hideWithAnimation();
+    m_miniPauseWindows.clear();
+
     m_stateMachine->transitionTo(AppState::WAITING_SCREEN);
 
     if (m_settings->warningEnabled()) {

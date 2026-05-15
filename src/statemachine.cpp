@@ -17,7 +17,10 @@ bool StateMachine::transitionTo(AppState newState)
 
 bool StateMachine::isInBreak() const
 {
-    return m_state == AppState::RELAXING || m_state == AppState::AUTO_RELAX;
+    return m_state == AppState::RELAXING
+        || m_state == AppState::AUTO_RELAX
+        || m_state == AppState::WAITING_SCREEN
+        || m_state == AppState::START_BIG_PAUSE;
 }
 
 bool StateMachine::isSuspended() const

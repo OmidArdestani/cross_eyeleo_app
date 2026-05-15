@@ -111,6 +111,16 @@ void TestStateMachine::testConvenienceMethods()
     sm.transitionTo(AppState::AUTO_RELAX);
     QVERIFY(sm.isInBreak());
 
+    // WAITING_SCREEN (long break pending) must also be considered "in break"
+    // so that a short break cannot overlap with an imminent long break.
+    sm.transitionTo(AppState::IDLE);
+    sm.transitionTo(AppState::WAITING_SCREEN);
+    QVERIFY(sm.isInBreak());
+
+    // START_BIG_PAUSE is likewise a pre-break state that must block short breaks.
+    sm.transitionTo(AppState::START_BIG_PAUSE);
+    QVERIFY(sm.isInBreak());
+
     sm.transitionTo(AppState::IDLE);
     sm.transitionTo(AppState::SUSPENDED);
     QVERIFY(!sm.isInBreak());
