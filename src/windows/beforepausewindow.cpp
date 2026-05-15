@@ -17,6 +17,12 @@ BeforePauseWindow::BeforePauseWindow(QWidget *parent)
     m_timer = new QTimer(this);
     m_timer->setInterval(1000);
     connect(m_timer, &QTimer::timeout, this, &BeforePauseWindow::onTick);
+
+    // Stop the countdown when either button is clicked so the timer cannot
+    // fire readyClicked() after the user has already acted on the window
+    // (e.g. chosen to postpone).
+    connect(m_readyButton,    &QPushButton::clicked, m_timer, &QTimer::stop);
+    connect(m_postponeButton, &QPushButton::clicked, m_timer, &QTimer::stop);
 }
 
 void BeforePauseWindow::setupUi()
